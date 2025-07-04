@@ -42,9 +42,8 @@ export function LoginForm({
 
   const onSubmit = async (data: LoginFormData) => {
     try {
-      const res = await login({ email: data.email, password: data.password }).unwrap();
-      router.replace('/admin');
-      console.log('Login success', res);
+      await login({ email: data.email, password: data.password }).unwrap();
+      router.push('/admin');
     } catch (err) {
       console.log('Login error', err);
     }

@@ -27,11 +27,11 @@ export default function LoginPage() {
   };
 
   const handleOTPVerificationSuccess = () => {
-    setFormState('reset'); // Move to reset password form after OTP success
+    setFormState('reset'); 
   };
 
   const handleResetPasswordSuccess = () => {
-    setFormState('login'); // Return to login after successful reset
+    setFormState('login'); 
     setEmail('');
   };
 

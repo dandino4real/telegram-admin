@@ -11,8 +11,9 @@ import { ForexUser } from './types/forexUser';
 
 const mutex = new Mutex();
 
+
 const baseQuery = fetchBaseQuery({
-  baseUrl: process.env.API_URL || '/api',
+  baseUrl: process.env.NEXT_PUBLIC_API_URL || '/api',
   credentials: 'include',
   prepareHeaders: (headers, { getState }) => {
     const state = getState() as RootState;

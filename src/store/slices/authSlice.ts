@@ -1,38 +1,3 @@
-// import { createSlice, PayloadAction } from "@reduxjs/toolkit";
-
-// export interface AuthState {
-//   accessToken: string | null;
-//   adminId: string | null;
-//   isLoggedIn: boolean;
-// }
-
-// const initialState: AuthState = {
-//   accessToken: null,
-//   adminId: null,
-//   isLoggedIn: false,
-// };
-
-// export const authSlice = createSlice({
-//   name: "auth",
-//   initialState,
-//   reducers: {
-//     setAccessToken: (state, action: PayloadAction<string | null>) => {
-//       state.accessToken = action.payload;
-//       state.isLoggedIn = true;
-//     },
-//     setAdminId(state, action: PayloadAction<string>) {
-//       state.adminId = action.payload;
-//     },
-//     logout(state) {
-//       state.accessToken = null;
-//       state.adminId = null;
-//       state.isLoggedIn = false;
-//     },
-//   },
-// });
-
-// export const { setAccessToken, setAdminId, logout } = authSlice.actions;
-// export default authSlice.reducer;
 
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { setCookie } from 'cookies-next';

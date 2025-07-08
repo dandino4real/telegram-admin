@@ -335,7 +335,7 @@ import { ForexUser } from './types/forexUser';
 const mutex = new Mutex();
 
 const baseQuery = fetchBaseQuery({
-  baseUrl: process.env.NEXT_PUBLIC_API_URL || 'https://telegram-api-k5mk.vercel.app/api',
+  baseUrl: process.env.NEXT_PUBLIC_API_URL || 'https://telegram-api-k5mk.vercel.app',
   credentials: 'include',
   prepareHeaders: (headers, { getState }) => {
     const state = getState() as RootState;
@@ -351,6 +351,8 @@ const baseQuery = fetchBaseQuery({
   },
 });
 
+
+console.log('base_url',process.env.NEXT_PUBLIC_API_URL )
 const baseQueryWithReauth: BaseQueryFn<string | FetchArgs, unknown, FetchBaseQueryError> = async (
   args,
   api,

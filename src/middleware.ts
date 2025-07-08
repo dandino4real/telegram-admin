@@ -51,7 +51,6 @@
 //   ],
 // }
 
-
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
@@ -59,7 +58,7 @@ export function middleware(request: NextRequest) {
   console.log('Middleware - Pathname:', request.nextUrl.pathname);
 
   // Define public routes that don't require authentication
-  const publicRoutes = ['/login'];
+  const publicRoutes = ['/login', '/forgot', '/otp', '/reset'];
   const isPublicRoute = publicRoutes.some((route) =>
     request.nextUrl.pathname.startsWith(route)
   );
@@ -71,16 +70,26 @@ export function middleware(request: NextRequest) {
   // Redirect root path (/) to /login
   if (request.nextUrl.pathname === '/') {
     console.log('Middleware - Redirecting / to /login');
-    const loginUrl = new URL('/login', request.url);
-    return NextResponse.redirect(loginUrl);
+    try {
+      const loginUrl = new URL('/login', request.url);
+      return NextResponse.redirect(loginUrl);
+    } catch (error) {
+      console.error('Middleware - Error creating login URL:', error);
+      return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+    }
   }
 
   // If the route is not public and no refreshToken is present, redirect to login
   if (!isPublicRoute && !refreshToken) {
     console.log('Middleware - Redirecting to /login?redirect=', request.nextUrl.pathname);
-    const loginUrl = new URL('/login', request.url);
-    loginUrl.searchParams.set('redirect', request.nextUrl.pathname);
-    return NextResponse.redirect(loginUrl);
+    try {
+      const loginUrl = new URL('/login', request.url);
+      loginUrl.searchParams.set('redirect', request.nextUrl.pathname);
+      return NextResponse.redirect(loginUrl);
+    } catch (error) {
+      console.error('Middleware - Error creating redirect URL:', error);
+      return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+    }
   }
 
   // Allow the request to proceed
@@ -92,9 +101,10 @@ export const config = {
   matcher: [
     /*
      * Match all request paths except:
+     * - API routes (/api/*)
      * - Static files (e.g., /_next/, /static/)
      * - Public files (e.g., /favicon.ico)
      */
-    '/((?!_next|static|favicon.ico).*)',
+    '/((?!api|_next|static|favicon.ico).*)',
   ],
 };

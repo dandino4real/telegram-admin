@@ -352,7 +352,6 @@ const baseQuery = fetchBaseQuery({
 });
 
 
-console.log('base_url',process.env.NEXT_PUBLIC_API_URL )
 const baseQueryWithReauth: BaseQueryFn<string | FetchArgs, unknown, FetchBaseQueryError> = async (
   args,
   api,

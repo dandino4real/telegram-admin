@@ -14,6 +14,7 @@ import { z } from 'zod';
 import { loginSchema } from '@/lib/schemas';
 import { Eye, EyeOff } from 'lucide-react';
 
+
 type LoginFormData = z.infer<typeof loginSchema>;
 
 export function LoginForm({
@@ -40,15 +41,18 @@ export function LoginForm({
   const router = useRouter();
   const [showPassword, setShowPassword] = useState(false);
 
+  // const dispatch = useDispatch();
+
   const onSubmit = async (data: LoginFormData) => {
     try {
       const result = await login({ email: data.email, password: data.password }).unwrap();
-      console.log('Login result:', result); 
+      console.log('Login result:', result);
       console.log('Navigating to /admin');
       router.push('/admin');
     } catch (err) {
       console.log('Login error', err);
     }
+
   };
 
   return (
@@ -121,3 +125,6 @@ export function LoginForm({
     </form>
   );
 }
+
+
+

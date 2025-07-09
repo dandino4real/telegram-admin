@@ -3,7 +3,7 @@
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
-import { useSelector } from 'react-redux';
+// import { useSelector } from 'react-redux';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { SidebarInset, SidebarTrigger } from '@/components/ui/sidebar';
 import { Separator } from '@/components/ui/separator';
@@ -48,8 +48,9 @@ import {
   useDeleteForexUserMutation,
   useGetAdminProfileQuery,
 } from '@/store/api';
-import { RootState } from '@/store';
+// import { RootState } from '@/store';
 import { getDialogContent } from './const';
+import { useSession } from '@/hooks/use-session';
 
 const ITEMS_PER_PAGE = 5;
 const AdminPermissions = ['approve_registration', 'reject_registration', 'delete_users'];
@@ -62,7 +63,8 @@ export default function ForexUsersPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [pendingAction, setPendingAction] = useState<DialogAction | null>(null);
 
-  const adminId = useSelector((state: RootState) => (state.auth as { adminId: string | undefined }).adminId);
+  // const adminId = useSelector((state: RootState) => (state.auth as { adminId: string | undefined }).adminId);
+   const { adminId} = useSession();
   const { data: adminData, isLoading: isAdminLoading, error: adminError } = useGetAdminProfileQuery(adminId || '', {
     skip: !adminId,
   });

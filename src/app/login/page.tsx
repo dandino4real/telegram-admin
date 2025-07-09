@@ -7,7 +7,7 @@ import { ForgotPasswordForm } from '@/components/forgot-password-form';
 import { OTPForm } from '@/components/otp-form';
 import { ResetPasswordForm } from '@/components/reset-password-form'; 
 import Link from 'next/link';
-import loginImage from '@/app/assets/login.avif';
+import loginImage from '@/app/assets/login.png';
 import Image from 'next/image';
 import { useState } from 'react';
 

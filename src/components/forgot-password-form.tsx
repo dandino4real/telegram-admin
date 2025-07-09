@@ -39,7 +39,6 @@ export function ForgotPasswordForm({
   const [forgotPassword, { isLoading, isError, error }] = useForgotPasswordMutation();
 
   const onSubmit = async (data: ForgotPasswordFormData) => {
-    console.log('got here trying to submit')
     try {
       await forgotPassword({ email: data.email }).unwrap();
       onSubmitSuccess(data.email);

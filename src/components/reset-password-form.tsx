@@ -32,7 +32,7 @@ export function ResetPasswordForm({ email, onSubmitSuccess, onBackToOTP }: Reset
     }
 
     try {
-      await resetPassword({ email, newPassword }).unwrap();
+    await resetPassword({ data: { email, newPassword } }).unwrap();
       toast.success("Password reset successfully.");
       onSubmitSuccess();
     } catch (error: unknown) {

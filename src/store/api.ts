@@ -427,6 +427,10 @@ export const api = createApi({
     "ForexUsers",
     "UserStats",
   ],
+
+   refetchOnFocus: true,          // Refetch when window regains focus
+  refetchOnReconnect: true,      // Refetch when network reconnects
+  refetchOnMountOrArgChange: 30,
   endpoints: (builder) => ({
     login: builder.mutation<DefaultResponse, SignInPayload>({
       query: (data) => ({
@@ -438,11 +442,7 @@ export const api = createApi({
       onQueryStarted: async (_, { queryFulfilled }) => {
         try {
           const { data } = await queryFulfilled;
-          console.log("api: Login response:", data);
-          console.log("api: accessToken:", data.accessToken);
-          console.log("api: refreshToken:", data.refreshToken);
-          console.log("api: id:", data.id);
-
+        
           if (data.accessToken) {
             setAccessToken(data.accessToken);
             console.log("api: Access token set in memory");
@@ -618,6 +618,7 @@ export const api = createApi({
         meta: response.meta,
       }),
       providesTags: ["CryptoUsers"],
+      keepUnusedDataFor: 5,
     }),
     approveCryptoUser: builder.mutation<
       { message: string; data: CryptoUser },
@@ -687,6 +688,7 @@ export const api = createApi({
         },
       }),
       providesTags: ["ForexUsers"],
+      keepUnusedDataFor: 5,
     }),
     approveForexUser: builder.mutation<
       { message: string; data: ForexUser },
@@ -767,3 +769,13 @@ export const {
   useValidateTokenQuery,
   useLogoutMutation,
 } = api;
+
+
+
+
+
+
+
+
+
+

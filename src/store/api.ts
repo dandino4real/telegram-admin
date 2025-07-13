@@ -428,8 +428,8 @@ export const api = createApi({
     "UserStats",
   ],
 
-   refetchOnFocus: true,          // Refetch when window regains focus
-  refetchOnReconnect: true,      // Refetch when network reconnects
+   refetchOnFocus: true,         
+  refetchOnReconnect: true,    
   refetchOnMountOrArgChange: 30,
   endpoints: (builder) => ({
     login: builder.mutation<DefaultResponse, SignInPayload>({

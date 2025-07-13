@@ -66,7 +66,7 @@ export default function CryptoUsersPage() {
   const [pendingAction, setPendingAction] = useState<DialogAction | null>(null);
 
   // const adminId = useSelector((state: RootState) => (state.auth as { adminId: string | undefined }).adminId);
- const { adminId} = useSession();
+  const { adminId } = useSession();
   const { data: adminData, isLoading: isAdminLoading, error: adminError } = useGetAdminProfileQuery(adminId || '', {
     skip: !adminId,
   });
@@ -95,17 +95,17 @@ export default function CryptoUsersPage() {
 
 
 
-// Manually trigger refetch when needed (e.g., after adding new user)
-// Add this useEffect to periodically refetch data
-useEffect(() => {
-  const interval = setInterval(() => {
-    if (!isFetching) {
-      refetch();
-    }
-  }, 10000); // Refetch every 10 seconds
-  
-  return () => clearInterval(interval);
-}, [refetch, isFetching]);
+  // Manually trigger refetch when needed (e.g., after adding new user)
+  // Add this useEffect to periodically refetch data
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (!isFetching) {
+        refetch();
+      }
+    }, 10000); // Refetch every 10 seconds
+
+    return () => clearInterval(interval);
+  }, [refetch, isFetching]);
 
 
   // Handle API errors
@@ -143,7 +143,7 @@ useEffect(() => {
       const user = users.find((u) => u.telegramId === telegramId);
       if (!user) return;
       await approveCryptoUser({ id: user._id }).unwrap();
-       refetch();
+      refetch();
       toast.success(
         <>
           <p className="font-bold">User Approved</p>
@@ -170,7 +170,7 @@ useEffect(() => {
       const user = users.find((u) => u.telegramId === telegramId);
       if (!user) return;
       await rejectCryptoUser({ id: user._id }).unwrap();
-       refetch();
+      refetch();
       toast.success(
         <>
           <p className="font-bold">User Rejected</p>
@@ -197,7 +197,7 @@ useEffect(() => {
       const user = users.find((u) => u.telegramId === telegramId);
       if (!user) return;
       await deleteCryptoUser({ id: user._id }).unwrap();
-       refetch();
+      refetch();
       toast.success(
         <>
           <p className="font-bold">User Deleted</p>

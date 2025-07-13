@@ -1,6 +1,6 @@
 
 
-// src/store/slices/sessionStore.ts
+// src/sessionStore.ts
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { api } from './api';
 import { DefaultResponse } from './type';
@@ -8,11 +8,13 @@ import { DefaultResponse } from './type';
 interface AuthSessionState {
   refreshToken: string | null;
   user: { id: string } | null;
+   isRehydrated: boolean;
 }
 
 const initialState: AuthSessionState = {
   refreshToken: null,
   user: null,
+  isRehydrated: false,
 };
 
 const authSessionSlice = createSlice({
@@ -64,9 +66,14 @@ const authSessionSlice = createSlice({
     });
     builder.addMatcher(
       (action) => action.type === 'persist/REHYDRATE',
-      (state, action: PayloadAction<unknown>) => {
-        console.log('sessionStore: Rehydration triggered, payload:', action.payload);
-      }
+      // (state, action: PayloadAction<unknown>) => {
+      //   console.log('sessionStore: Rehydration triggered, payload:', action.payload);
+      // }
+       (state, action: PayloadAction<unknown>) => {
+    console.log('sessionStore: Rehydration completed');
+    console.log('sessionStore: Rehydration triggered, payload:', action.payload);
+    state.isRehydrated = true; // Set flag when rehydration completes
+  }
     );
   },
 });

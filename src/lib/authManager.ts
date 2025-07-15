@@ -20,13 +20,10 @@ export const clearAccessToken = () => {
 };
 
 
-// lib/authManager.ts
 export const clearAllTokens = () => {
   accessToken = null;
   console.log('authManager: All tokens cleared');
 };
-
-
 
 export const setLoadingState = (state: boolean) => {
   isLoading = state;

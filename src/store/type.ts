@@ -1,6 +1,6 @@
 
 
-// src/types/type.ts
+// store/type.ts
 export interface DefaultResponse {
   message: string;
   accessToken?: string;

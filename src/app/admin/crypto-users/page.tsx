@@ -51,7 +51,7 @@ import {
 import { getDialogContent } from './const';
 import { useSession } from '@/hooks/use-session';
 
-const ITEMS_PER_PAGE = 5;
+const ITEMS_PER_PAGE = 10;
 const BLOFIN_ONLY_COUNTRIES = ['USA', 'UK', 'Canada'];
 const AdminPermissions = ['approve_registration', 'reject_registration', 'delete_users'];
 

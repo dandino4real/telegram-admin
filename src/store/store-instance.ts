@@ -1,6 +1,6 @@
 
 
-// src/store/store-instance.ts
+// store/store-instance.ts
 'use client';
 
 import { makeStore } from './index';

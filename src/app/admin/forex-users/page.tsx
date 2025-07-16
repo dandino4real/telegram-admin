@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
@@ -49,7 +48,7 @@ import {
 } from '@/store/api';
 import { useSession } from '@/hooks/use-session';
 
-const ITEMS_PER_PAGE = 5;
+const ITEMS_PER_PAGE = 10;
 const AdminPermissions = ['approve_registration', 'reject_registration', 'delete_users'];
 
 export default function ForexUsersPage() {

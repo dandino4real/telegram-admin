@@ -25,7 +25,7 @@ export type UserStats = {
   monthlyBreakdown: Array<{ month: string; crypto: number; forex: number }>;
 };
 
-const AUTH_URL = "auth";
+const AUTH_URL = "api/auth";
 
 export const api = createApi({
   reducerPath: "api",
@@ -113,7 +113,7 @@ export const api = createApi({
       }
     >({
       query: ({ page, limit, search, status, dateFilter }) => ({
-        url: "/admin/all",
+        url: "/api/admin/all",
         method: REST_API_VERBS.GET,
         params: { page, limit, search, status, date: dateFilter },
       }),
@@ -130,7 +130,7 @@ export const api = createApi({
       { _id: string; updates: Partial<Admin> }
     >({
       query: ({ _id, updates }) => ({
-        url: `/admin/edit/${_id}`,
+        url: `/api/admin/edit/${_id}`,
         method: REST_API_VERBS.PATCH,
         data: updates,
       }),
@@ -138,14 +138,14 @@ export const api = createApi({
     }),
     deleteAdmin: builder.mutation<{ success: boolean }, string>({
       query: (_id) => ({
-        url: `/admin/delete/${_id}`,
+        url: `/api/admin/delete/${_id}`,
         method: REST_API_VERBS.DELETE,
       }),
       invalidatesTags: ["Admins"],
     }),
     createAdmin: builder.mutation<Admin, Partial<Admin>>({
       query: (data) => ({
-        url: "/admin/create",
+        url: "/api/admin/create",
         method: REST_API_VERBS.POST,
         data,
       }),
@@ -153,7 +153,7 @@ export const api = createApi({
     }),
     getAdminProfile: builder.query<Admin, string>({
       query: (id) => ({
-        url: `/admin/profile/${id}`,
+        url: `/api/admin/profile/${id}`,
         method: REST_API_VERBS.GET,
       }),
       transformResponse: (response: { admin: Admin }) => response.admin,
@@ -171,7 +171,7 @@ export const api = createApi({
       }
     >({
       query: ({ id, updates }) => ({
-        url: `/admin/profile/${id}`,
+        url: `/api/admin/profile/${id}`,
         method: REST_API_VERBS.PATCH,
         data: updates,
       }),
@@ -210,7 +210,7 @@ export const api = createApi({
         dateFrom,
         dateTo,
       }) => ({
-        url: "/users/crypto",
+        url: "/api/users/crypto",
         method: REST_API_VERBS.GET,
         params: {
           page,
@@ -243,7 +243,7 @@ export const api = createApi({
       { id: string }
     >({
       query: ({ id }) => ({
-        url: `/users/crypto/${id}/approve`,
+        url: `/api/users/crypto/${id}/approve`,
         method: REST_API_VERBS.PATCH,
       }),
       invalidatesTags: ["CryptoUsers", "UserStats"],
@@ -253,7 +253,7 @@ export const api = createApi({
       { id: string }
     >({
       query: ({ id }) => ({
-        url: `/users/crypto/${id}/reject`,
+        url: `/api/users/crypto/${id}/reject`,
         method: REST_API_VERBS.PATCH,
       }),
       invalidatesTags: ["CryptoUsers", "UserStats"],
@@ -263,7 +263,7 @@ export const api = createApi({
       { id: string }
     >({
       query: ({ id }) => ({
-        url: `/users/crypto/${id}`,
+        url: `/api/users/crypto/${id}`,
         method: REST_API_VERBS.DELETE,
       }),
       invalidatesTags: ["CryptoUsers", "UserStats"],
@@ -288,7 +288,7 @@ export const api = createApi({
       }
     >({
       query: ({ page, limit, search, status, startDate, endDate }) => ({
-        url: "/users/forex",
+        url: "/api/users/forex",
         method: REST_API_VERBS.GET,
         params: { page, limit, search, status, startDate, endDate },
       }),
@@ -313,7 +313,7 @@ export const api = createApi({
       { id: string; admin: { name: string; email: string } }
     >({
       query: ({ id, admin }) => ({
-        url: `/users/forex/${id}/approve`,
+        url: `/api/users/forex/${id}/approve`,
         method: REST_API_VERBS.PATCH,
         data: admin,
       }),
@@ -328,7 +328,7 @@ export const api = createApi({
       }
     >({
       query: ({ id, admin, rejectionReason }) => ({
-        url: `/users/forex/${id}/reject`,
+        url: `/api/users/forex/${id}/reject`,
         method: REST_API_VERBS.PATCH,
         data: { ...admin, rejectionReason },
       }),
@@ -339,14 +339,14 @@ export const api = createApi({
       { id: string }
     >({
       query: ({ id }) => ({
-        url: `/users/forex/${id}`,
+        url: `/api/users/forex/${id}`,
         method: REST_API_VERBS.DELETE,
       }),
       invalidatesTags: ["ForexUsers", "UserStats"],
     }),
     getUserStats: builder.query<UserStats, void>({
       query: () => ({
-        url: "/users/stats",
+        url: "/api/users/stats",
         method: REST_API_VERBS.GET,
       }),
       providesTags: [{ type: "UserStats" }],
@@ -354,7 +354,7 @@ export const api = createApi({
     }),
     validateToken: builder.query<{ message: string }, void>({
       query: () => ({
-        url: "/admin/validate",
+        url: "/api/admin/validate",
         method: REST_API_VERBS.GET,
       }),
       transformResponse: (response: { message: string }) => response,

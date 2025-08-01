@@ -194,7 +194,7 @@ export const api = createApi({
         limit: number;
         search?: string;
         status?: "pending" | "approved" | "rejected";
-        platform?: "bybit" | "blofin";
+        platform?: "both" | "blofin";
         country?: string;
         dateFrom?: string;
         dateTo?: string;

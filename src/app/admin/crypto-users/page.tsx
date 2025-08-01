@@ -59,7 +59,7 @@ const AdminPermissions = ['approve_registration', 'reject_registration', 'delete
 export default function CryptoUsersPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'pending' | 'approved' | 'rejected'>('all');
-  const [platformFilter, setPlatformFilter] = useState<'all' | 'bybit' | 'blofin'>('all');
+  const [platformFilter, setPlatformFilter] = useState<'all' | 'both' | 'blofin'>('all');
   const [countryFilter, setCountryFilter] = useState('all');
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
@@ -420,13 +420,13 @@ export default function CryptoUsersPage() {
                   <SelectItem value="rejected">Rejected</SelectItem>
                 </SelectContent>
               </Select>
-              <Select value={platformFilter} onValueChange={(v) => setPlatformFilter(v as 'bybit' | 'blofin' | 'all')}>
+              <Select value={platformFilter} onValueChange={(v) => setPlatformFilter(v as 'both' | 'blofin' | 'all')}>
                 <SelectTrigger className="w-full sm:w-[140px]">
                   <SelectValue placeholder="Platform" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Platforms</SelectItem>
-                  <SelectItem value="bybit">Bybit</SelectItem>
+                  <SelectItem value="both">Bybit</SelectItem>
                   <SelectItem value="blofin">Blofin</SelectItem>
                 </SelectContent>
               </Select>

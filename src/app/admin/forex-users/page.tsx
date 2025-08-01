@@ -2,6 +2,7 @@
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
+import { Copy, Check } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { SidebarInset, SidebarTrigger } from '@/components/ui/sidebar';
 import { Separator } from '@/components/ui/separator';
@@ -47,6 +48,7 @@ import {
   useGetAdminProfileQuery,
 } from '@/store/api';
 import { useSession } from '@/hooks/use-session';
+import { truncate } from '@/lib/utils';
 
 const ITEMS_PER_PAGE = 10;
 const AdminPermissions = ['approve_registration', 'reject_registration', 'delete_users'];
@@ -59,6 +61,7 @@ export default function ForexUsersPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [pendingAction, setPendingAction] = useState<DialogAction | null>(null);
   const [rejectionReason, setRejectionReason] = useState<'no_affiliate_link' | 'insufficient_deposit' | ''>('');
+  const [copiedId, setCopiedId] = useState<string | null>(null);
 
   const { adminId } = useSession();
   const { data: adminData, isLoading: isAdminLoading, error: adminError } = useGetAdminProfileQuery(adminId || '', {
@@ -120,12 +123,14 @@ export default function ForexUsersPage() {
     }
   }, [pendingAction]);
 
-  const users = useMemo(() => {
-    return (usersData?.data || []).map((user) => ({
-      ...user,
-      telegramId: user.telegramId ?? '',
-    })) as ForexUser[];
-  }, [usersData]);
+const users = useMemo(() => {
+  const rawUsers = (usersData?.data || []) as ForexUser[];
+  return rawUsers.map((user) => ({
+    ...user,
+    telegramId: user.telegramId ?? '',
+  }));
+}, [usersData]);
+
   const meta = usersData?.meta || { page: 1, limit: ITEMS_PER_PAGE, total: 0, totalPages: 0 };
 
   const handleApprove = async (telegramId: string) => {
@@ -297,6 +302,16 @@ export default function ForexUsersPage() {
     return null;
   };
 
+  const copyToClipboard = async (text: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopiedId(text);
+      setTimeout(() => setCopiedId(null), 2000);
+    } catch (err) {
+      console.error('Failed to copy:', err);
+    }
+  };
+
   const clearFilters = () => {
     setSearchTerm('');
     setStatusFilter('all');
@@ -456,11 +471,27 @@ export default function ForexUsersPage() {
                     <TableRow key={user._id}>
                       <TableCell className="font-medium">
                         <p className="flex items-center gap-2">
-                          {user.fullName || user.telegramId || 'Unknown'}
+                            {truncate(user.fullName || user.telegramId || 'Unknown', 20)}
+                          </p>
+                        <p className="text-xs text-muted-foreground">
+                          {truncate(user.username || 'Unknown', 20)}
                         </p>
-                        <p className="text-xs text-muted-foreground">{user.username || 'Unknown'}</p>
+                        
                       </TableCell>
-                      <TableCell>{user.excoTraderLoginId || 'N/A'}</TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          <span>{user.excoTraderLoginId || 'N/A'}</span>
+                          {user.excoTraderLoginId && (
+                            <button
+                              onClick={() => user.excoTraderLoginId && copyToClipboard(user.excoTraderLoginId)}
+                              className="text-muted-foreground hover:text-primary"
+                            >
+                              {copiedId === user.excoTraderLoginId ? <Check size={16} /> : <Copy size={16} />}
+                            </button>
+                          )}
+                        </div>
+                      </TableCell>
+
                       <TableCell>
                         <Badge variant="outline" className="capitalize">
                           {user.registeredVia || 'exco'}

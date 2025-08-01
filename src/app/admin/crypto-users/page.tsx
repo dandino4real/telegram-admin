@@ -2,7 +2,7 @@
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
-// import { useSelector } from 'react-redux';
+import { Copy, Check } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { SidebarInset, SidebarTrigger } from '@/components/ui/sidebar';
 import { Separator } from '@/components/ui/separator';
@@ -50,6 +50,7 @@ import {
 // import { RootState } from '@/store';
 import { getDialogContent } from './const';
 import { useSession } from '@/hooks/use-session';
+import { truncate } from '@/lib/utils';
 
 const ITEMS_PER_PAGE = 10;
 const BLOFIN_ONLY_COUNTRIES = ['USA', 'UK', 'Canada'];
@@ -64,8 +65,9 @@ export default function CryptoUsersPage() {
   const [dateTo, setDateTo] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [pendingAction, setPendingAction] = useState<DialogAction | null>(null);
+  const [copiedUid, setCopiedUid] = useState<string | null>(null);
 
-  // const adminId = useSelector((state: RootState) => (state.auth as { adminId: string | undefined }).adminId);
+
   const { adminId } = useSession();
   const { data: adminData, isLoading: isAdminLoading, error: adminError } = useGetAdminProfileQuery(adminId || '', {
     skip: !adminId,
@@ -276,17 +278,48 @@ export default function CryptoUsersPage() {
     }
   };
 
+
   const renderUIDColumn = (user: CryptoUser) => {
+
+    const copyToClipboard = async (uid: string) => {
+      try {
+        await navigator.clipboard.writeText(uid);
+        setCopiedUid(uid);
+        setTimeout(() => setCopiedUid(null), 1500); // reset after 1.5s
+      } catch (err) {
+        console.error("Failed to copy UID:", err);
+      }
+    };
+
     const isBlofinOnlyCountry = BLOFIN_ONLY_COUNTRIES.includes(user.country || '');
+
     return (
-      <>
-        {user.bybitUid && user.blofinUid && <p className="font-medium">Bybit: {user.bybitUid}</p>}
-        {user.blofinUid && (
-          <p className={isBlofinOnlyCountry ? 'font-medium' : 'text-sm text-muted-foreground'}>
-            Blofin: {user.blofinUid}
-          </p>
+      <div className="flex flex-col gap-1">
+        {user.bybitUid && user.blofinUid && (
+          <div className="flex items-center gap-2">
+            <p className="font-medium">Bybit: {user.bybitUid}</p>
+            <button
+              onClick={() => user.bybitUid && copyToClipboard(user.bybitUid)}
+              className="text-muted-foreground hover:text-primary"
+            >
+              {copiedUid === user.bybitUid ? <Check size={16} /> : <Copy size={16} />}
+            </button>
+          </div>
         )}
-      </>
+        {user.blofinUid && (
+          <div className="flex items-center gap-2">
+            <p className={isBlofinOnlyCountry ? 'font-medium' : 'text-sm text-muted-foreground'}>
+              Blofin: {user.blofinUid}
+            </p>
+            <button
+              onClick={() => user.blofinUid && copyToClipboard(user.blofinUid)}
+              className="text-muted-foreground hover:text-primary"
+            >
+              {copiedUid === user.blofinUid ? <Check size={16} /> : <Copy size={16} />}
+            </button>
+          </div>
+        )}
+      </div>
     );
   };
 
@@ -462,10 +495,13 @@ export default function CryptoUsersPage() {
                     <TableRow key={user._id}>
                       <TableCell className="font-medium">
                         <p className="flex items-center gap-2">
-                          {user.fullName || user.telegramId || 'Unknown'}
+                          {truncate(user.fullName || user.telegramId || 'Unknown', 20)}
                         </p>
-                        <p className="text-xs text-muted-foreground">{user.username || "Unknown"}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {truncate(user.username || 'Unknown', 20)}
+                        </p>
                       </TableCell>
+
                       <TableCell>{renderUIDColumn(user)}</TableCell>
                       <TableCell>
                         {BLOFIN_ONLY_COUNTRIES.includes(user.country) ? (
@@ -602,3 +638,6 @@ export default function CryptoUsersPage() {
     </SidebarInset>
   );
 }
+
+
+

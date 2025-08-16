@@ -293,9 +293,6 @@ const users = useMemo(() => {
           <p>Rejected by: {user.rejectedBy.name}</p>
           <p>{user.rejectedBy.email}</p>
           <p>{format(new Date(actionDate), 'dd/MM/yyyy HH:mm')}</p>
-          {/* {user.rejectionReason && (
-            <p>Reason: {user.rejectionReason === 'no_affiliate_link' ? 'Not registered with affiliate link' : 'Insufficient deposit'}</p>
-          )} */}
         </div>
       );
     }

@@ -250,11 +250,17 @@ export const api = createApi({
     }),
     rejectCryptoUser: builder.mutation<
       { message: string; data: CryptoUser },
-      { id: string }
+      {
+        id: string;
+        admin: { name: string; email: string };
+        rejectionReason: "no_affiliate_link" | "no_kyc";
+      }
     >({
-      query: ({ id }) => ({
+      query: ({ id, admin, rejectionReason  }) => ({
         url: `/api/users/crypto/${id}/reject`,
         method: REST_API_VERBS.PATCH,
+        data: { ...admin, rejectionReason },
+
       }),
       invalidatesTags: ["CryptoUsers", "UserStats"],
     }),

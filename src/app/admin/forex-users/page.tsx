@@ -50,7 +50,7 @@ import {
 import { useSession } from '@/hooks/use-session';
 import { truncate } from '@/lib/utils';
 
-const ITEMS_PER_PAGE = 10;
+const ITEMS_PER_PAGE = 30;
 const AdminPermissions = ['approve_registration', 'reject_registration', 'delete_users'];
 
 export default function ForexUsersPage() {

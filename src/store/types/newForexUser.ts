@@ -1,0 +1,26 @@
+export type NewForexUser = {
+  _id: string;
+  telegramId: string;
+  username?: string;
+  fullName?: string;
+  firstName?: string;
+  country: string;
+  broker: string;
+  loginId: string;
+  loginId_status: "awaiting_approval" | "approved" | "rejected";
+  loginId_approvedAt?: Date;
+  loginId_rejectedAt?: Date;
+  loginId_rejectionReason?: "deposit_missing" | "deposit_incomplete" | "duplicate_id" | "wrong_link" | "demo_account" | "other";
+  screenshotUrl?: string;
+  screenshotUrl_status: "pending" | "awaiting_approval" | "approved" | "rejected";
+  screenshotUrl_approvedAt?: Date;
+  screenshotUrl_rejectedAt?: Date;
+  screenshotUrl_rejectionReason?: "blurry image" | "wrong screenshot" | "other";
+  testTradesScreenshotUrl?: string;
+  testTradesScreenshotUrl_status?: "pending" | "awaiting_approval"  | "approved" | "rejected";
+  testTradesScreenshotUrl_approvedAt?: Date;
+  testTradesScreenshotUrl_rejectedAt?: Date;
+  testTradesScreenshotUrl_rejectionReason?: "blurry image" | "wrong screenshot" | "other";
+  createdAt: Date;
+  updatedAt: Date;
+};

@@ -15,6 +15,7 @@ import {
 } from "./type";
 import { setAccessToken } from "@/lib/authManager";
 import { setSession } from "./sessionStore";
+import { NewForexUser } from "./types/newForexUser";
 
 export type UserStats = {
   totalApprovedUsers: number;
@@ -36,6 +37,7 @@ export const api = createApi({
     "CryptoUsers",
     "ForexUsers",
     "UserStats",
+    "NewForexUsers",
   ],
 
   refetchOnFocus: true,
@@ -288,7 +290,7 @@ export const api = createApi({
         page: number;
         limit: number;
         search?: string;
-        status?: "pending" | "approved" | "rejected";
+        status?: "pending" | "awaiting_approver" | "approved" | "rejected" | "all";
         startDate?: string;
         endDate?: string;
       }
@@ -371,6 +373,129 @@ export const api = createApi({
         method: REST_API_VERBS.PATCH,
       }),
     }),
+
+getNewForexUsers: builder.query<
+      {
+        data: NewForexUser[];
+        meta: { page: number; limit: number; total: number; totalPages: number };
+      },
+      { page: number; limit: number; search?: string; status?: string }
+    >({
+      query: ({ page, limit, search, status }) => ({
+        url: "/api/new-forex-users",
+        method: REST_API_VERBS.GET,
+        params: { page, limit, search, status },
+      }),
+      transformResponse: (response: { users: NewForexUser[]; total: number }, meta, arg) => ({
+        data: response.users,
+        meta: {
+          page: arg.page,
+          limit: arg.limit,
+          total: response.total,
+          totalPages: Math.ceil(response.total / arg.limit),
+        },
+      }),
+      providesTags: ["NewForexUsers"],
+    }),
+  approveForexLoginId: builder.mutation<{ message: string; user: NewForexUser }, { id: string }>({
+      query: ({id }) => ({
+        url: `/api/new-forex-users/loginid/${id}/approve`,
+        method: REST_API_VERBS.PUT,
+      }),
+      invalidatesTags: ["NewForexUsers", "UserStats"],
+    }),
+
+  rejectForexLoginId: builder.mutation<
+  { message: string; user: NewForexUser },
+  {
+    id: string;
+    reason: "deposit_missing" | "deposit_incomplete" | "duplicate_id" | "wrong_link" | "demo_account" | "other";
+    customReason?: string;
+  }
+>({
+  query: ({ id, reason, customReason }) => ({
+    url: `/api/new-forex-users/loginid/${id}/reject`,
+    method: REST_API_VERBS.PUT,
+    data: {
+      reason,
+      ...(customReason ? { customReason } : {}), // Only include if present
+    },
+  }),
+  invalidatesTags: ["NewForexUsers", "UserStats"],
+}),
+
+    approveForexAccountScreenshot: builder.mutation<
+      { message: string; user: NewForexUser },
+      { id: string }
+    >({
+      query: ({ id }) => ({
+        url: `/api/new-forex-users/account-screenshot/${id}/approve`,
+        method: REST_API_VERBS.PUT,
+      }),
+      invalidatesTags: ["NewForexUsers", "UserStats"],
+    }),
+
+    rejectForexAccountScreenshot: builder.mutation<
+  { message: string; user: NewForexUser },
+  {
+    id: string;
+    reason: "blurry_image" | "wrong_screenshot" | "other";
+    customReason?: string;
+  }
+>({
+  query: ({ id, reason, customReason }) => ({
+    url: `/api/new-forex-users/account-screenshot/${id}/reject`,
+    method: REST_API_VERBS.PUT,
+    data: {
+      reason,
+      ...(customReason ? { customReason } : {}), // include only if provided
+    },
+  }),
+  invalidatesTags: ["NewForexUsers", "UserStats"],
+}),
+
+
+    approveForexTestTradesScreenshot: builder.mutation<
+      { message: string; user: NewForexUser },
+      { id: string }
+    >({
+      query: ({ id }) => ({
+        url: `/api/new-forex-users/testtrades-screenshot/${id}/approve`,
+        method: REST_API_VERBS.PUT,
+      }),
+      invalidatesTags: ["NewForexUsers", "UserStats"],
+    }),
+
+
+    rejectForexTestTradesScreenshot: builder.mutation<
+  { message: string; user: NewForexUser },
+  {
+    id: string;
+    reason: "blurry_image" | "wrong_screenshot" | "other";
+    customReason?: string;
+  }
+>({
+  query: ({ id, reason, customReason }) => ({
+    url: `/api/new-forex-users/testtrades-screenshot/${id}/reject`,
+    method: REST_API_VERBS.PUT,
+    data: {
+      reason,
+      ...(customReason ? { customReason } : {}), // include only if provided
+    },
+  }),
+  invalidatesTags: ["NewForexUsers", "UserStats"],
+}),
+
+
+    deleteNewForexUser: builder.mutation<{ message: string }, { id: string }>({
+      query: ({ id }) => ({
+        url: `/api/new-forex-users/${id}`,
+        method: REST_API_VERBS.DELETE,
+      }),
+      invalidatesTags: ["NewForexUsers", "UserStats"],
+    }),
+
+    
   }),
 });
 
@@ -396,4 +521,13 @@ export const {
   useGetUserStatsQuery,
   useValidateTokenQuery,
   useLogoutMutation,
+  useGetNewForexUsersQuery,
+  useApproveForexLoginIdMutation,
+  useRejectForexLoginIdMutation,
+  useApproveForexAccountScreenshotMutation,
+  useRejectForexAccountScreenshotMutation,
+  useApproveForexTestTradesScreenshotMutation,
+  useRejectForexTestTradesScreenshotMutation,
+  useDeleteNewForexUserMutation,
+
 } = api;

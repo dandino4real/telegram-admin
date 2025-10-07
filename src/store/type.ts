@@ -13,6 +13,7 @@ export enum REST_API_VERBS {
   POST = 'POST',
   PATCH = 'PATCH',
   DELETE = 'DELETE',
+  PUT= 'PUT',
 }
 
 

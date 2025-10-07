@@ -190,9 +190,14 @@ const data = {
           url: '/admin/crypto-users',
           icon: DollarSign,
         },
+        // {
+        //   title: 'Forex Users',
+        //   url: '/admin/forex-users',
+        //   icon: TrendingUp,
+        // },
         {
           title: 'Forex Users',
-          url: '/admin/forex-users',
+          url: '/admin/new-forex-users',
           icon: TrendingUp,
         },
       ],
@@ -213,17 +218,15 @@ const data = {
 
 function AppSidebar() {
   const router = useRouter();
+  console.log('got here app sidebar')
   const { adminId, isLoggedIn, isRestoring } = useSession();
+  console.log({adminId, isLoggedIn, isRestoring})
   const { data: adminProfile, isLoading, isFetching, error } = useGetAdminProfileQuery(
     adminId ?? skipToken
   );
+  console.log({adminProfile})
 
-  console.log('AppSidebar: isLoading:', isLoading);
-  console.log('AppSidebar: isRestoring:', isRestoring);
-  console.log('AppSidebar: isFetching:', isFetching);
-  console.log('AppSidebar: adminProfile:', adminProfile);
-  console.log('AppSidebar: error:', error);
-
+ 
   React.useEffect(() => {
     if (!isRestoring && !isLoggedIn) {
       console.log('AppSidebar: Not logged in, redirecting to /login');

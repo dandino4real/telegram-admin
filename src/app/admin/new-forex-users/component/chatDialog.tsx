@@ -178,6 +178,7 @@ import { useGetChatMessgesQuery } from "@/store/api"; // Adjust path to your api
 
 interface ChatMessage {
   from: "user" | "admin";
+  user: "Admin" | "User";
   text: string;
   timestamp: string;
 }
@@ -218,7 +219,12 @@ export function ChatDialog({
   // Set initial messages from fetched data
   useEffect(() => {
     if (data) {
-      setMessages(data.messages);
+      setMessages(
+        data.messages.map((msg: { from: "user" | "admin"; text: string; timestamp: string }) => ({
+          ...msg,
+          user: msg.from === "admin" ? "Admin" : "User",
+        }))
+      );
     }
   }, [data]);
 
@@ -248,7 +254,7 @@ export function ChatDialog({
       if (parsedData.type === "user_message" && parsedData.telegramId === telegramId) {
         setMessages((prev) => [
           ...prev,
-          { from: "user", text: parsedData.text, timestamp: parsedData.time },
+          { from: "user", user: "User", text: parsedData.text, timestamp: parsedData.time },
         ]);
       }
       // Optional: Handle admin_reply from other admins if backend broadcasts them
@@ -282,7 +288,7 @@ export function ChatDialog({
     const timestamp = new Date().toISOString();
 
     // Optimistically append admin message locally
-    setMessages((prev) => [...prev, { from: "admin", text: msg, timestamp }]);
+    setMessages((prev) => [...prev, { from: "admin", user: "Admin", text: msg, timestamp }]);
 
     // Send to backend via WebSocket to persist and notify user
     wsRef.current.send(
@@ -322,13 +328,13 @@ export function ChatDialog({
                   <div
                     key={`${msg.from}-${msg.timestamp}-${i}`} // Better key using timestamp
                     className={`flex ${
-                      msg.from === "admin" ? "justify-end" : "justify-start"
+                      msg.user === "Admin" ? "justify-end" : "justify-start"
                     }`}
                   >
                     <div
                       className={`relative px-3 py-2 rounded-2xl text-sm max-w-[75%] shadow-sm
                         ${
-                          msg.from === "admin"
+                          msg.user === "Admin"
                             ? "bg-blue-500 text-white rounded-br-none"
                             : "bg-gray-200 text-gray-900 rounded-bl-none"
                         }
@@ -337,7 +343,7 @@ export function ChatDialog({
                       <p>{msg.text}</p>
                       <span
                         className={`text-[10px] opacity-70 mt-1 block text-right ${
-                          msg.from === "admin" ? "text-white/80" : "text-gray-600"
+                          msg.user === "Admin" ? "text-white/80" : "text-gray-600"
                         }`}
                       >
                         {format(new Date(msg.timestamp), "HH:mm")}

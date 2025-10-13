@@ -74,7 +74,7 @@ export default function CryptoUsersPage() {
     skip: !adminId,
   });
 
-  
+
 
   const {
     data: usersData,
@@ -303,7 +303,7 @@ export default function CryptoUsersPage() {
 
     return (
       <div className="flex flex-col gap-1">
-          {user.weexUid && (
+        {user.weexUid && (
           <div className="flex items-center gap-2">
             <p className="font-medium">Weex: {user.weexUid}</p>
             <button
@@ -314,7 +314,7 @@ export default function CryptoUsersPage() {
             </button>
           </div>
         )}
-        {user.bybitUid && user.blofinUid && (
+        {user.bybitUid && (
           <div className="flex items-center gap-2">
             <p className="font-medium">Bybit: {user.bybitUid}</p>
             <button
@@ -325,7 +325,7 @@ export default function CryptoUsersPage() {
             </button>
           </div>
         )}
-      
+
         {user.blofinUid && (
           <div className="flex items-center gap-2">
             <p className={isBlofinOnlyCountry ? 'font-medium' : 'text-sm text-muted-foreground'}>
@@ -378,7 +378,7 @@ export default function CryptoUsersPage() {
   const dialogContent = getDialogContent(pendingAction);
 
   if (adminData && adminData.role === 'admin_forex') {
-      return null
+    return null
   }
 
   if (isAdminLoading || !adminData) {
@@ -534,12 +534,30 @@ export default function CryptoUsersPage() {
                           </Badge>
                         ) : (
                           <div className="flex flex-col gap-1">
-                            <Badge variant="outline" className="capitalize">
+                            {user.registeredVia === 'weex' && (
+                              <Badge variant="outline" className="capitalize">
+                                weex
+                              </Badge>
+                            )
+
+                            }
+                            {(user.registeredVia === 'bybit' || user.registeredVia === 'both') && (
+                              <Badge variant="outline" className="capitalize">
+                                bybit
+                              </Badge>
+                            )}
+                            {user.registeredVia === 'blofin' && (
+                              <Badge variant="outline" className="capitalize">
+                                blofin
+                              </Badge>
+                            )}
+
+                            {/* <Badge variant="outline" className="capitalize">
                               bybit
                             </Badge>
                             <Badge variant="outline" className="capitalize">
                               blofin
-                            </Badge>
+                            </Badge> */}
                           </div>
                         )}
                       </TableCell>

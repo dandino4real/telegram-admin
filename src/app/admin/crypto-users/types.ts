@@ -16,7 +16,7 @@ export interface CryptoUser {
   createdAt: string; // ISO date string (e.g., "2025-07-01T00:00:00.000Z")
   approvedAt?: string; // ISO date string
   rejectedAt?: string; // ISO date string
-  registeredVia?: "bybit" | "blofin" | "weex";
+  registeredVia?: "bybit" | "blofin" | "weex" | "both";
   approvedBy?: {
     name: string;
     email: string;

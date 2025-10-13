@@ -303,6 +303,17 @@ export default function CryptoUsersPage() {
 
     return (
       <div className="flex flex-col gap-1">
+          {user.weexUid && (
+          <div className="flex items-center gap-2">
+            <p className="font-medium">Weex: {user.weexUid}</p>
+            <button
+              onClick={() => user.weexUid && copyToClipboard(user.weexUid)}
+              className="text-muted-foreground hover:text-primary"
+            >
+              {copiedUid === user.weexUid ? <Check size={16} /> : <Copy size={16} />}
+            </button>
+          </div>
+        )}
         {user.bybitUid && user.blofinUid && (
           <div className="flex items-center gap-2">
             <p className="font-medium">Bybit: {user.bybitUid}</p>
@@ -314,17 +325,7 @@ export default function CryptoUsersPage() {
             </button>
           </div>
         )}
-        {user.weexUid && user.weexUid && (
-          <div className="flex items-center gap-2">
-            <p className="font-medium">Weex: {user.weexUid}</p>
-            <button
-              onClick={() => user.weexUid && copyToClipboard(user.weexUid)}
-              className="text-muted-foreground hover:text-primary"
-            >
-              {copiedUid === user.weexUid ? <Check size={16} /> : <Copy size={16} />}
-            </button>
-          </div>
-        )}
+      
         {user.blofinUid && (
           <div className="flex items-center gap-2">
             <p className={isBlofinOnlyCountry ? 'font-medium' : 'text-sm text-muted-foreground'}>
@@ -451,6 +452,7 @@ export default function CryptoUsersPage() {
                   <SelectItem value="all">All Platforms</SelectItem>
                   <SelectItem value="both">Bybit</SelectItem>
                   <SelectItem value="blofin">Blofin</SelectItem>
+                  <SelectItem value="weex">Weex</SelectItem>
                 </SelectContent>
               </Select>
               <Select value={countryFilter} onValueChange={setCountryFilter}>

@@ -761,7 +761,7 @@ import {
 } from '@/store/api';
 import { NewForexUser } from '@/store/types/newForexUser';
 import { useSession } from '@/hooks/use-session';
-import { ChatDialog } from './component/chartDialog';
+import { ChatDialog } from './component/chatDialog';
 
 const ITEMS_PER_PAGE = 20;
 

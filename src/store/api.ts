@@ -495,6 +495,16 @@ getNewForexUsers: builder.query<
       invalidatesTags: ["NewForexUsers", "UserStats"],
     }),
 
+
+    getChatMessges: builder.query<{ messages: Array<{ from: "user" | "admin"; text: string; timestamp: string }> }, { telegramId: string }>({
+    query: ({ telegramId }) => ({
+      url: `/api/new-forex-users/chat/${telegramId}/messages`,
+      method: REST_API_VERBS.GET,
+    }),
+    transformResponse: (response: { messages: Array<{ from: "user" | "admin"; text: string; timestamp: string }> }) => response,
+    // No tags needed as this is real-time data via WebSocket
+  }), 
+
     
   }),
 });
@@ -529,5 +539,5 @@ export const {
   useApproveForexTestTradesScreenshotMutation,
   useRejectForexTestTradesScreenshotMutation,
   useDeleteNewForexUserMutation,
-
+  useGetChatMessgesQuery,
 } = api;

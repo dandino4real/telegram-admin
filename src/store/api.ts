@@ -196,7 +196,7 @@ export const api = createApi({
         limit: number;
         search?: string;
         status?: "pending" | "approved" | "rejected";
-        platform?: "both" | "blofin";
+        platform?: "both" | "blofin" | "weex";
         country?: string;
         dateFrom?: string;
         dateTo?: string;

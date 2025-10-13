@@ -59,7 +59,7 @@ const AdminPermissions = ['approve_registration', 'reject_registration', 'delete
 export default function CryptoUsersPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'pending' | 'approved' | 'rejected'>('all');
-  const [platformFilter, setPlatformFilter] = useState<'all' | 'both' | 'blofin'>('all');
+  const [platformFilter, setPlatformFilter] = useState<'all' | 'both' | 'blofin' | 'weex'>('all');
   const [countryFilter, setCountryFilter] = useState('all');
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
@@ -311,6 +311,17 @@ export default function CryptoUsersPage() {
               className="text-muted-foreground hover:text-primary"
             >
               {copiedUid === user.bybitUid ? <Check size={16} /> : <Copy size={16} />}
+            </button>
+          </div>
+        )}
+        {user.weexUid && user.weexUid && (
+          <div className="flex items-center gap-2">
+            <p className="font-medium">Weex: {user.weexUid}</p>
+            <button
+              onClick={() => user.weexUid && copyToClipboard(user.weexUid)}
+              className="text-muted-foreground hover:text-primary"
+            >
+              {copiedUid === user.weexUid ? <Check size={16} /> : <Copy size={16} />}
             </button>
           </div>
         )}

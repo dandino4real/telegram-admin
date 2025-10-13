@@ -1,6 +1,6 @@
 // types/admin.ts
 
-export type AdminRole = "admin" | "superadmin";
+export type AdminRole = "admin" |  "admin_crypto" |  "admin_forex" |  "superadmin";
 export type AdminStatus = "active" | "inactive" | "suspended";
 
 export interface Admin {

@@ -74,6 +74,8 @@ export default function CryptoUsersPage() {
     skip: !adminId,
   });
 
+  
+
   const {
     data: usersData,
     refetch,
@@ -362,6 +364,10 @@ export default function CryptoUsersPage() {
   };
 
   const dialogContent = getDialogContent(pendingAction);
+
+  if (adminData && adminData.role === 'admin_forex') {
+      return null
+  }
 
   if (isAdminLoading || !adminData) {
     return <div>Loading admin profile...</div>;

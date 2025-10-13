@@ -1,4 +1,5 @@
 
+// // src/components/AppSidebar.tsx
 // 'use client';
 
 // import { Bot, DollarSign, Home, TrendingUp, UsersIcon } from 'lucide-react';
@@ -38,9 +39,14 @@
 //           url: '/admin/crypto-users',
 //           icon: DollarSign,
 //         },
+//         // {
+//         //   title: 'Forex Users',
+//         //   url: '/admin/forex-users',
+//         //   icon: TrendingUp,
+//         // },
 //         {
 //           title: 'Forex Users',
-//           url: '/admin/forex-users',
+//           url: '/admin/new-forex-users',
 //           icon: TrendingUp,
 //         },
 //       ],
@@ -54,31 +60,39 @@
 //           icon: UsersIcon,
 //         },
 //       ],
-//       requiresSuperAdmin: true, // Flag to restrict to superadmin
+//       requiresSuperAdmin: true,
 //     },
 //   ],
 // };
 
 // function AppSidebar() {
 //   const router = useRouter();
+//   console.log('got here app sidebar')
 //   const { adminId, isLoggedIn, isRestoring } = useSession();
-//   const { data: adminProfile, isLoading, isFetching } = useGetAdminProfileQuery(
+//   console.log({adminId, isLoggedIn, isRestoring})
+//   const { data: adminProfile, isLoading, isFetching, error } = useGetAdminProfileQuery(
 //     adminId ?? skipToken
 //   );
+//   console.log({adminProfile})
 
-// console.log('isLogging', isLoading)
-// console.log('isRestoring', isRestoring)
-// console.log('isFetching', isFetching)
-
+ 
 //   React.useEffect(() => {
-//     if (!isLoggedIn && !isRestoring && !isFetching) {
+//     if (!isRestoring && !isLoggedIn) {
+//       console.log('AppSidebar: Not logged in, redirecting to /login');
 //       router.replace('/login');
 //     }
-//   }, [isLoggedIn, isRestoring, isFetching, router]);
+//   }, [isLoggedIn, isRestoring, router]);
 
-//   if (!isLoggedIn || isRestoring) return null;
+//   if (isRestoring) {
+//     console.log('AppSidebar: Session restoring, rendering null');
+//     return null;
+//   }
 
-//   // Filter navMain to show Admin Management only for superadmin
+//   if (!isLoggedIn) {
+//     console.log('AppSidebar: Not logged in, rendering null');
+//     return null;
+//   }
+
 //   const filteredNavMain = data.navMain.filter(
 //     (item) => !item.requiresSuperAdmin || (adminProfile?.role === 'superadmin')
 //   );
@@ -135,10 +149,14 @@
 //       <SidebarRail />
 //       <SidebarFooter>
 //         {isLoading || isFetching ? (
-//           <div className='px-5 '>Loading...</div>
+//           <div className="px-5">Loading...</div>
+//         ) : error ? (
+//           <div className="px-5 text-red-500">Error loading profile</div>
 //         ) : adminProfile ? (
 //           <NavUser user={adminProfile} isLoading={isLoading} />
-//         ) : null}
+//         ) : (
+//           <div className="px-5">No profile data</div>
+//         )}
 //       </SidebarFooter>
 //     </Sidebar>
 //   );
@@ -148,9 +166,6 @@
 
 
 
-
-
-// src/components/AppSidebar.tsx
 'use client';
 
 import { Bot, DollarSign, Home, TrendingUp, UsersIcon } from 'lucide-react';
@@ -166,8 +181,8 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarRail,
+  SidebarFooter,
 } from '@/components/ui/sidebar';
-import { SidebarFooter } from '@/components/ui/sidebar';
 import NavUser from './nav-user';
 import { useSession } from '@/hooks/use-session';
 import { useRouter } from 'next/navigation';
@@ -190,11 +205,6 @@ const data = {
           url: '/admin/crypto-users',
           icon: DollarSign,
         },
-        // {
-        //   title: 'Forex Users',
-        //   url: '/admin/forex-users',
-        //   icon: TrendingUp,
-        // },
         {
           title: 'Forex Users',
           url: '/admin/new-forex-users',
@@ -216,44 +226,73 @@ const data = {
   ],
 };
 
+// Define AdminRole type to match the expected values
+type AdminRole = 'crypto_admin' | 'forex_admin' | 'admin' | 'superadmin';
+
 function AppSidebar() {
   const router = useRouter();
-  console.log('got here app sidebar')
   const { adminId, isLoggedIn, isRestoring } = useSession();
-  console.log({adminId, isLoggedIn, isRestoring})
-  const { data: adminProfile, isLoading, isFetching, error } = useGetAdminProfileQuery(
-    adminId ?? skipToken
-  );
-  console.log({adminProfile})
+  const { data: adminProfile, isLoading, isFetching, error } =
+    useGetAdminProfileQuery(adminId ?? skipToken);
 
- 
   React.useEffect(() => {
     if (!isRestoring && !isLoggedIn) {
-      console.log('AppSidebar: Not logged in, redirecting to /login');
       router.replace('/login');
     }
   }, [isLoggedIn, isRestoring, router]);
 
-  if (isRestoring) {
-    console.log('AppSidebar: Session restoring, rendering null');
-    return null;
-  }
+  if (isRestoring || !isLoggedIn) return null;
 
-  if (!isLoggedIn) {
-    console.log('AppSidebar: Not logged in, rendering null');
-    return null;
-  }
+  // ✅ Role-based menu filtering logic
+  const filteredNavMain = data.navMain
+    .map((item) => {
+      if (item.title === 'User Management' && item.items) {
+        let allowedItems: typeof item.items = [];
 
-  const filteredNavMain = data.navMain.filter(
-    (item) => !item.requiresSuperAdmin || (adminProfile?.role === 'superadmin')
-  );
+        switch (adminProfile?.role as AdminRole) {
+          case 'crypto_admin':
+            allowedItems = item.items.filter(
+              (i) => i.url === '/admin/crypto-users'
+            );
+            break;
+          case 'forex_admin':
+            allowedItems = item.items.filter(
+              (i) => i.url === '/admin/new-forex-users'
+            );
+            break;
+          case 'admin':
+            allowedItems = item.items.filter(
+              (i) =>
+                i.url === '/admin/crypto-users' ||
+                i.url === '/admin/new-forex-users'
+            );
+            break;
+          case 'superadmin':
+            allowedItems = item.items;
+            break;
+          default:
+            allowedItems = [];
+        }
+
+        return { ...item, items: allowedItems };
+      }
+
+      return item;
+    })
+    .filter(
+      (item) =>
+        !item.requiresSuperAdmin || adminProfile?.role === 'superadmin'
+    );
 
   return (
     <Sidebar>
       <SidebarHeader>
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton size="lg" className="data-[state=open]:bg-sidebar-accent">
+            <SidebarMenuButton
+              size="lg"
+              className="data-[state=open]:bg-sidebar-accent"
+            >
               <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
                 <Bot className="size-4" />
               </div>
@@ -265,6 +304,7 @@ function AppSidebar() {
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarHeader>
+
       <SidebarContent>
         {filteredNavMain.map((item) => (
           <SidebarGroup key={item.title}>
@@ -297,7 +337,9 @@ function AppSidebar() {
           </SidebarGroup>
         ))}
       </SidebarContent>
+
       <SidebarRail />
+
       <SidebarFooter>
         {isLoading || isFetching ? (
           <div className="px-5">Loading...</div>

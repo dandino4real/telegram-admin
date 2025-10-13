@@ -57,7 +57,6 @@ export default function AdminManagementPage() {
     try {
       await deleteAdmin(id).unwrap();
       toast.success("Admin deleted successfully");
-      console.log("Admin deleted successfully");
     } catch (error) {
       toast.error("Failed to delete admin");
       console.log("Failed to delete admin:", error);

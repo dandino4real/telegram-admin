@@ -258,11 +258,10 @@ export const api = createApi({
         rejectionReason: "no_affiliate_link" | "no_kyc";
       }
     >({
-      query: ({ id, admin, rejectionReason  }) => ({
+      query: ({ id, admin, rejectionReason }) => ({
         url: `/api/users/crypto/${id}/reject`,
         method: REST_API_VERBS.PATCH,
         data: { ...admin, rejectionReason },
-
       }),
       invalidatesTags: ["CryptoUsers", "UserStats"],
     }),
@@ -290,7 +289,12 @@ export const api = createApi({
         page: number;
         limit: number;
         search?: string;
-        status?: "pending" | "awaiting_approver" | "approved" | "rejected" | "all";
+        status?:
+          | "pending"
+          | "awaiting_approver"
+          | "approved"
+          | "rejected"
+          | "all";
         startDate?: string;
         endDate?: string;
       }
@@ -374,10 +378,15 @@ export const api = createApi({
       }),
     }),
 
-getNewForexUsers: builder.query<
+    getNewForexUsers: builder.query<
       {
         data: NewForexUser[];
-        meta: { page: number; limit: number; total: number; totalPages: number };
+        meta: {
+          page: number;
+          limit: number;
+          total: number;
+          totalPages: number;
+        };
       },
       { page: number; limit: number; search?: string; status?: string }
     >({
@@ -386,7 +395,11 @@ getNewForexUsers: builder.query<
         method: REST_API_VERBS.GET,
         params: { page, limit, search, status },
       }),
-      transformResponse: (response: { users: NewForexUser[]; total: number }, meta, arg) => ({
+      transformResponse: (
+        response: { users: NewForexUser[]; total: number },
+        meta,
+        arg
+      ) => ({
         data: response.users,
         meta: {
           page: arg.page,
@@ -397,32 +410,41 @@ getNewForexUsers: builder.query<
       }),
       providesTags: ["NewForexUsers"],
     }),
-  approveForexLoginId: builder.mutation<{ message: string; user: NewForexUser }, { id: string }>({
-      query: ({id }) => ({
+    approveForexLoginId: builder.mutation<
+      { message: string; user: NewForexUser },
+      { id: string }
+    >({
+      query: ({ id }) => ({
         url: `/api/new-forex-users/loginid/${id}/approve`,
         method: REST_API_VERBS.PUT,
       }),
       invalidatesTags: ["NewForexUsers", "UserStats"],
     }),
 
-  rejectForexLoginId: builder.mutation<
-  { message: string; user: NewForexUser },
-  {
-    id: string;
-    reason: "deposit_missing" | "deposit_incomplete" | "duplicate_id" | "wrong_link" | "demo_account" | "other";
-    customReason?: string;
-  }
->({
-  query: ({ id, reason, customReason }) => ({
-    url: `/api/new-forex-users/loginid/${id}/reject`,
-    method: REST_API_VERBS.PUT,
-    data: {
-      reason,
-      ...(customReason ? { customReason } : {}), // Only include if present
-    },
-  }),
-  invalidatesTags: ["NewForexUsers", "UserStats"],
-}),
+    rejectForexLoginId: builder.mutation<
+      { message: string; user: NewForexUser },
+      {
+        id: string;
+        reason:
+          | "deposit_missing"
+          | "deposit_incomplete"
+          | "duplicate_id"
+          | "wrong_link"
+          | "demo_account"
+          | "other";
+        customReason?: string;
+      }
+    >({
+      query: ({ id, reason, customReason }) => ({
+        url: `/api/new-forex-users/loginid/${id}/reject`,
+        method: REST_API_VERBS.PUT,
+        data: {
+          reason,
+          ...(customReason ? { customReason } : {}), // Only include if present
+        },
+      }),
+      invalidatesTags: ["NewForexUsers", "UserStats"],
+    }),
 
     approveForexAccountScreenshot: builder.mutation<
       { message: string; user: NewForexUser },
@@ -436,24 +458,23 @@ getNewForexUsers: builder.query<
     }),
 
     rejectForexAccountScreenshot: builder.mutation<
-  { message: string; user: NewForexUser },
-  {
-    id: string;
-    reason: "blurry_image" | "wrong_screenshot" | "other";
-    customReason?: string;
-  }
->({
-  query: ({ id, reason, customReason }) => ({
-    url: `/api/new-forex-users/account-screenshot/${id}/reject`,
-    method: REST_API_VERBS.PUT,
-    data: {
-      reason,
-      ...(customReason ? { customReason } : {}), // include only if provided
-    },
-  }),
-  invalidatesTags: ["NewForexUsers", "UserStats"],
-}),
-
+      { message: string; user: NewForexUser },
+      {
+        id: string;
+        reason: "blurry_image" | "wrong_screenshot" | "other";
+        customReason?: string;
+      }
+    >({
+      query: ({ id, reason, customReason }) => ({
+        url: `/api/new-forex-users/account-screenshot/${id}/reject`,
+        method: REST_API_VERBS.PUT,
+        data: {
+          reason,
+          ...(customReason ? { customReason } : {}), // include only if provided
+        },
+      }),
+      invalidatesTags: ["NewForexUsers", "UserStats"],
+    }),
 
     approveForexTestTradesScreenshot: builder.mutation<
       { message: string; user: NewForexUser },
@@ -466,26 +487,24 @@ getNewForexUsers: builder.query<
       invalidatesTags: ["NewForexUsers", "UserStats"],
     }),
 
-
     rejectForexTestTradesScreenshot: builder.mutation<
-  { message: string; user: NewForexUser },
-  {
-    id: string;
-    reason: "blurry_image" | "wrong_screenshot" | "other";
-    customReason?: string;
-  }
->({
-  query: ({ id, reason, customReason }) => ({
-    url: `/api/new-forex-users/testtrades-screenshot/${id}/reject`,
-    method: REST_API_VERBS.PUT,
-    data: {
-      reason,
-      ...(customReason ? { customReason } : {}), // include only if provided
-    },
-  }),
-  invalidatesTags: ["NewForexUsers", "UserStats"],
-}),
-
+      { message: string; user: NewForexUser },
+      {
+        id: string;
+        reason: "blurry_image" | "wrong_screenshot" | "other";
+        customReason?: string;
+      }
+    >({
+      query: ({ id, reason, customReason }) => ({
+        url: `/api/new-forex-users/testtrades-screenshot/${id}/reject`,
+        method: REST_API_VERBS.PUT,
+        data: {
+          reason,
+          ...(customReason ? { customReason } : {}), // include only if provided
+        },
+      }),
+      invalidatesTags: ["NewForexUsers", "UserStats"],
+    }),
 
     deleteNewForexUser: builder.mutation<{ message: string }, { id: string }>({
       query: ({ id }) => ({
@@ -495,17 +514,31 @@ getNewForexUsers: builder.query<
       invalidatesTags: ["NewForexUsers", "UserStats"],
     }),
 
-
-    getChatMessges: builder.query<{ messages: Array<{ from: "user" | "admin"; text: string; timestamp: string }> }, { telegramId: string }>({
-    query: ({ telegramId }) => ({
-      url: `/api/new-forex-users/chat/${telegramId}/messages`,
-      method: REST_API_VERBS.GET,
+    getChatMessges: builder.query<
+      {
+        messages: Array<{
+          sender: "user" | "admin";
+          user: "User" | "Admin";
+          text: string;
+          timestamp: string;
+        }>;
+      },
+      { telegramId: string }
+    >({
+      query: ({ telegramId }) => ({
+        url: `/api/new-forex-users/chat/${telegramId}/messages`,
+        method: REST_API_VERBS.GET,
+      }),
+      transformResponse: (response: {
+        messages: Array<{
+          sender: "user" | "admin";
+          user: "User" | "Admin";
+          text: string;
+          timestamp: string;
+        }>;
+      }) => response,
+      // No tags needed as this is real-time data via WebSocket
     }),
-    transformResponse: (response: { messages: Array<{ from: "user" | "admin"; text: string; timestamp: string }> }) => response,
-    // No tags needed as this is real-time data via WebSocket
-  }), 
-
-    
   }),
 });
 

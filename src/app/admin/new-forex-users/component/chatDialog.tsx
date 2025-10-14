@@ -177,7 +177,7 @@ import { format } from "date-fns";
 import { useGetChatMessgesQuery } from "@/store/api"; // Adjust path to your api.ts file
 
 interface ChatMessage {
-  from: "user" | "admin";
+  sender: "user" | "admin";
   user: "Admin" | "User";
   text: string;
   timestamp: string;
@@ -220,9 +220,9 @@ export function ChatDialog({
   useEffect(() => {
     if (data) {
       setMessages(
-        data.messages.map((msg: { from: "user" | "admin"; text: string; timestamp: string }) => ({
+        data.messages.map((msg: { sender: "user" | "admin"; text: string; timestamp: string }) => ({
           ...msg,
-          user: msg.from === "admin" ? "Admin" : "User",
+          user: msg.sender === "admin" ? "Admin" : "User",
         }))
       );
     }
@@ -254,7 +254,7 @@ export function ChatDialog({
       if (parsedData.type === "user_message" && parsedData.telegramId === telegramId) {
         setMessages((prev) => [
           ...prev,
-          { from: "user", user: "User", text: parsedData.text, timestamp: parsedData.time },
+          { sender: "user", user: "User", text: parsedData.text, timestamp: parsedData.time },
         ]);
       }
       // Optional: Handle admin_reply from other admins if backend broadcasts them
@@ -288,7 +288,7 @@ export function ChatDialog({
     const timestamp = new Date().toISOString();
 
     // Optimistically append admin message locally
-    setMessages((prev) => [...prev, { from: "admin", user: "Admin", text: msg, timestamp }]);
+    setMessages((prev) => [...prev, { sender: "admin", user: "Admin", text: msg, timestamp }]);
 
     // Send to backend via WebSocket to persist and notify user
     wsRef.current.send(
@@ -326,7 +326,7 @@ export function ChatDialog({
               ) : (
                 messages.map((msg, i) => (
                   <div
-                    key={`${msg.from}-${msg.timestamp}-${i}`} // Better key using timestamp
+                    key={`${msg.sender}-${msg.timestamp}-${i}`} // Better key using timestamp
                     className={`flex ${
                       msg.user === "Admin" ? "justify-end" : "justify-start"
                     }`}

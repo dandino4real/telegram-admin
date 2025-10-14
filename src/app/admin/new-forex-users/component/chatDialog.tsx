@@ -1,3 +1,4 @@
+
 // "use client";
 
 // import React, { useEffect, useRef, useState } from "react";
@@ -12,9 +13,11 @@
 // import { Input } from "@/components/ui/input";
 // import { ScrollArea } from "@/components/ui/scroll-area";
 // import { format } from "date-fns";
+// import { useGetChatMessgesQuery } from "@/store/api";
 
 // interface ChatMessage {
-//   from: "user" | "admin";
+//   sender: "user" | "admin";
+//   user: "Admin" | "User";
 //   text: string;
 //   timestamp: string;
 // }
@@ -39,8 +42,41 @@
 //   const wsRef = useRef<WebSocket | null>(null);
 //   const scrollRef = useRef<HTMLDivElement>(null);
 
+//   const { data, isFetching, refetch } = useGetChatMessgesQuery(
+//     { telegramId },
+//     { skip: !open }
+//   );
+
+//   // Refetch messages when dialog opens to ensure fresh data
 //   useEffect(() => {
-//     if (!open) return;
+//     if (open) {
+//       setMessages([]); 
+//       refetch();
+//     }
+//   }, [open, refetch]);
+
+//   // Set initial messages from fetched data
+//   useEffect(() => {
+//     if (data) {
+//       setMessages(
+//         data.messages.map((msg: { sender: "user" | "admin"; text: string; timestamp: string }) => ({
+//           ...msg,
+//           user: msg.sender === "admin" ? "Admin" : "User",
+//         }))
+//       );
+//     }
+//   }, [data]);
+
+//   // Connect WebSocket only after history is loaded (!isFetching && data exists)
+//   useEffect(() => {
+//     if (!open || !data || isFetching) {
+//       // Close WS if conditions not met
+//       if (wsRef.current) {
+//         wsRef.current.close();
+//         wsRef.current = null;
+//       }
+//       return;
+//     }
 
 //     const apiUrl = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3000/api";
 //     const wsUrl = apiUrl.replace("http", "ws");
@@ -53,17 +89,21 @@
 //     ws.onerror = (err) => console.log("WebSocket error:", err);
 
 //     ws.onmessage = (event) => {
-//       const data = JSON.parse(event.data);
-//       if (data.type === "user_message" && data.telegramId === telegramId) {
+//       const parsedData = JSON.parse(event.data);
+//       if (parsedData.type === "user_message" && parsedData.telegramId === telegramId) {
 //         setMessages((prev) => [
 //           ...prev,
-//           { from: "user", text: data.text, timestamp: data.time },
+//           { sender: "user", user: "User", text: parsedData.text, timestamp: parsedData.time },
 //         ]);
 //       }
+
 //     };
 
-//     return () => ws.close();
-//   }, [open, telegramId, adminId]);
+//     return () => {
+//       ws.close();
+//       wsRef.current = null;
+//     };
+//   }, [open, data, isFetching, telegramId, adminId]);
 
 //   useEffect(() => {
 //     if (scrollRef.current) {
@@ -74,7 +114,12 @@
 //   const sendMessage = () => {
 //     if (!input.trim() || !wsRef.current) return;
 //     const msg = input.trim();
+//     const timestamp = new Date().toISOString();
 
+//     // Optimistically append admin message locally
+//     setMessages((prev) => [...prev, { sender: "admin", user: "Admin", text: msg, timestamp }]);
+
+//     // Send to backend via WebSocket to persist and notify user
 //     wsRef.current.send(
 //       JSON.stringify({
 //         type: "admin_reply",
@@ -83,12 +128,10 @@
 //       })
 //     );
 
-//     setMessages((prev) => [
-//       ...prev,
-//       { from: "admin", text: msg, timestamp: new Date().toISOString() },
-//     ]);
 //     setInput("");
 //   };
+
+//   const showLoading = isFetching && messages.length === 0;
 
 //   return (
 //     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -101,39 +144,43 @@
 //         <div className="border rounded-md p-2 bg-muted/30">
 //           <ScrollArea className="h-80">
 //             <div ref={scrollRef} className="space-y-3 px-1 py-2">
-//               {messages.length === 0 && (
+//               {showLoading ? (
+//                 <p className="text-sm text-muted-foreground text-center mt-4">
+//                   Loading messages...
+//                 </p>
+//               ) : messages.length === 0 ? (
 //                 <p className="text-sm text-muted-foreground text-center mt-4">
 //                   No messages yet
 //                 </p>
-//               )}
-
-//               {messages.map((msg, i) => (
-//                 <div
-//                   key={i}
-//                   className={`flex ${
-//                     msg.from === "admin" ? "justify-end" : "justify-start"
-//                   }`}
-//                 >
+//               ) : (
+//                 messages.map((msg, i) => (
 //                   <div
-//                     className={`relative px-3 py-2 rounded-2xl text-sm max-w-[75%] shadow-sm
-//                       ${
-//                         msg.from === "admin"
-//                           ? "bg-blue-500 text-white rounded-br-none"
-//                           : "bg-gray-200 text-gray-900 rounded-bl-none"
-//                       }
-//                     `}
+//                     key={`${msg.sender}-${msg.timestamp}-${i}`} 
+//                     className={`flex ${
+//                       msg.sender === "admin" ? "justify-end" : "justify-start"
+//                     }`}
 //                   >
-//                     <p>{msg.text}</p>
-//                     <span
-//                       className={`text-[10px] opacity-70 mt-1 block text-right ${
-//                         msg.from === "admin" ? "text-white/80" : "text-gray-600"
-//                       }`}
+//                     <div
+//                       className={`relative px-3 py-2 rounded-2xl text-sm max-w-[75%] shadow-sm
+//                         ${
+//                           msg.sender === "admin"
+//                             ? "bg-blue-500 text-white rounded-br-none"
+//                             : "bg-gray-200 text-gray-900 rounded-bl-none"
+//                         }
+//                       `}
 //                     >
-//                       {format(new Date(msg.timestamp), "HH:mm")}
-//                     </span>
+//                       <p>{msg.text}</p>
+//                       <span
+//                         className={`text-[10px] opacity-70 mt-1 block text-right ${
+//                           msg.sender === "admin" ? "text-white/80" : "text-gray-600"
+//                         }`}
+//                       >
+//                         {format(new Date(msg.timestamp), "HH:mm")}
+//                       </span>
+//                     </div>
 //                   </div>
-//                 </div>
-//               ))}
+//                 ))
+//               )}
 //             </div>
 //           </ScrollArea>
 //         </div>
@@ -146,14 +193,14 @@
 //             onChange={(e) => setInput(e.target.value)}
 //             onKeyDown={(e) => e.key === "Enter" && sendMessage()}
 //           />
-//           <Button onClick={sendMessage}>Send</Button>
+//           <Button onClick={sendMessage} disabled={!wsRef.current}>
+//             Send
+//           </Button>
 //         </DialogFooter>
 //       </DialogContent>
 //     </Dialog>
 //   );
 // }
-
-
 
 
 
@@ -174,7 +221,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { format } from "date-fns";
-import { useGetChatMessgesQuery } from "@/store/api"; // Adjust path to your api.ts file
+import { useGetChatMessgesQuery } from "@/store/api";
 
 interface ChatMessage {
   sender: "user" | "admin";
@@ -198,40 +245,43 @@ export function ChatDialog({
   username,
   adminId,
 }: ChatDialogProps) {
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  // Remove local messages state for history; use query data directly
+  const [wsMessages, setWsMessages] = useState<ChatMessage[]>([]); // Only for real-time WS appends
   const [input, setInput] = useState("");
   const wsRef = useRef<WebSocket | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const { data, isFetching, refetch } = useGetChatMessgesQuery(
     { telegramId },
-    { skip: !open }
+    { 
+      skip: !open,
+      refetchOnMountOrArgChange: true, // Ensure fresh data on open
+    }
   );
 
-  // Refetch messages when dialog opens to ensure fresh data
+  // Refetch on open (no clear needed)
   useEffect(() => {
     if (open) {
-      setMessages([]); // Temporarily clear to show loading
+      setWsMessages([]); // Clear only WS appends
       refetch();
     }
   }, [open, refetch]);
 
-  // Set initial messages from fetched data
-  useEffect(() => {
-    if (data) {
-      setMessages(
-        data.messages.map((msg: { sender: "user" | "admin"; text: string; timestamp: string }) => ({
-          ...msg,
-          user: msg.sender === "admin" ? "Admin" : "User",
-        }))
-      );
-    }
+  // Transform query data to messages (memoize if large)
+  const historyMessages: ChatMessage[] = React.useMemo(() => {
+    if (!data) return [];
+    return data.messages.map((msg: { sender: "user" | "admin"; text: string; timestamp: string }) => ({
+      ...msg,
+      user: msg.sender === "admin" ? "Admin" : "User",
+    }));
   }, [data]);
 
-  // Connect WebSocket only after history is loaded (!isFetching && data exists)
+  // Combine history + WS messages (dedupe if needed by timestamp)
+  const allMessages = [...historyMessages, ...wsMessages];
+
+  // WebSocket Effect (unchanged, but depends on open only – history is separate)
   useEffect(() => {
-    if (!open || !data || isFetching) {
-      // Close WS if conditions not met
+    if (!open) {
       if (wsRef.current) {
         wsRef.current.close();
         wsRef.current = null;
@@ -245,52 +295,41 @@ export function ChatDialog({
 
     wsRef.current = ws;
 
-    ws.onopen = () => console.log("✅ Chat WebSocket connected");
-    ws.onclose = () => console.log("❌ Chat WebSocket closed");
+    ws.onopen = () => console.log("Chat WebSocket connected");
+    ws.onclose = () => console.log("Chat WebSocket closed");
     ws.onerror = (err) => console.log("WebSocket error:", err);
 
     ws.onmessage = (event) => {
       const parsedData = JSON.parse(event.data);
       if (parsedData.type === "user_message" && parsedData.telegramId === telegramId) {
-        setMessages((prev) => [
+        setWsMessages((prev) => [
           ...prev,
           { sender: "user", user: "User", text: parsedData.text, timestamp: parsedData.time },
         ]);
       }
-      // Optional: Handle admin_reply from other admins if backend broadcasts them
-      // if (parsedData.type === "admin_reply" && parsedData.telegramId === telegramId) {
-      //   setMessages((prev) => {
-      //     // Avoid duplicate if last message matches (simple check)
-      //     const lastMsg = prev[prev.length - 1];
-      //     if (lastMsg?.from === "admin" && lastMsg.text === parsedData.text) {
-      //       return prev;
-      //     }
-      //     return [...prev, { from: "admin", text: parsedData.text, timestamp: parsedData.time }];
-      //   });
-      // }
     };
 
     return () => {
       ws.close();
       wsRef.current = null;
     };
-  }, [open, data, isFetching, telegramId, adminId]);
+  }, [open, telegramId, adminId]); // Remove data/isFetching dep – connect immediately on open
 
+  // Auto-scroll
   useEffect(() => {
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
-  }, [messages]);
+  }, [allMessages]);
 
   const sendMessage = () => {
     if (!input.trim() || !wsRef.current) return;
     const msg = input.trim();
     const timestamp = new Date().toISOString();
 
-    // Optimistically append admin message locally
-    setMessages((prev) => [...prev, { sender: "admin", user: "Admin", text: msg, timestamp }]);
+    // Optimistically append to WS state
+    setWsMessages((prev) => [...prev, { sender: "admin", user: "Admin", text: msg, timestamp }]);
 
-    // Send to backend via WebSocket to persist and notify user
     wsRef.current.send(
       JSON.stringify({
         type: "admin_reply",
@@ -302,7 +341,8 @@ export function ChatDialog({
     setInput("");
   };
 
-  const showLoading = isFetching && messages.length === 0;
+  const showLoading = isFetching && historyMessages.length === 0;
+  const noMessages = !showLoading && allMessages.length === 0;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -319,22 +359,22 @@ export function ChatDialog({
                 <p className="text-sm text-muted-foreground text-center mt-4">
                   Loading messages...
                 </p>
-              ) : messages.length === 0 ? (
+              ) : noMessages ? (
                 <p className="text-sm text-muted-foreground text-center mt-4">
                   No messages yet
                 </p>
               ) : (
-                messages.map((msg, i) => (
+                allMessages.map((msg, i) => (
                   <div
-                    key={`${msg.sender}-${msg.timestamp}-${i}`} // Better key using timestamp
+                    key={`${msg.timestamp}-${msg.sender}-${i}`} // Use timestamp + index for uniqueness
                     className={`flex ${
-                      msg.user === "Admin" ? "justify-end" : "justify-start"
+                      msg.sender === "admin" ? "justify-end" : "justify-start"
                     }`}
                   >
                     <div
                       className={`relative px-3 py-2 rounded-2xl text-sm max-w-[75%] shadow-sm
                         ${
-                          msg.user === "Admin"
+                          msg.sender === "admin"
                             ? "bg-blue-500 text-white rounded-br-none"
                             : "bg-gray-200 text-gray-900 rounded-bl-none"
                         }
@@ -343,7 +383,7 @@ export function ChatDialog({
                       <p>{msg.text}</p>
                       <span
                         className={`text-[10px] opacity-70 mt-1 block text-right ${
-                          msg.user === "Admin" ? "text-white/80" : "text-gray-600"
+                          msg.sender === "admin" ? "text-white/80" : "text-gray-600"
                         }`}
                       >
                         {format(new Date(msg.timestamp), "HH:mm")}

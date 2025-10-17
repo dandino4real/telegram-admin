@@ -21,6 +21,14 @@ export type NewForexUser = {
   testTradesScreenshotUrl_approvedAt?: Date;
   testTradesScreenshotUrl_rejectedAt?: Date;
   testTradesScreenshotUrl_rejectionReason?: "blurry image" | "wrong screenshot" | "other";
+  hasUnreadMessages: boolean;
+   messages: {
+    sender: "user" | "admin";
+    user: "User" | "Admin";
+    text: string;
+    readByAdmin: boolean;
+    timestamp: Date;
+  }[];
   createdAt: Date;
   updatedAt: Date;
 };

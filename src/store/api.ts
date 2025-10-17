@@ -388,12 +388,12 @@ export const api = createApi({
           totalPages: number;
         };
       },
-      { page: number; limit: number; search?: string; status?: string }
+      { page: number; limit: number; search?: string; status?: string; broker?: string; hasUnreadMessages?: 'true' | 'false' | 'all' }
     >({
-      query: ({ page, limit, search, status }) => ({
+      query: ({ page, limit, search, status,broker, hasUnreadMessages }) => ({
         url: "/api/new-forex-users",
         method: REST_API_VERBS.GET,
-        params: { page, limit, search, status },
+        params: { page, limit, search, status, broker, hasUnreadMessages: hasUnreadMessages === 'all' ? undefined : hasUnreadMessages },
       }),
       transformResponse: (
         response: { users: NewForexUser[]; total: number },
@@ -537,7 +537,6 @@ export const api = createApi({
           timestamp: string;
         }>;
       }) => response,
-      // No tags needed as this is real-time data via WebSocket
     }),
   }),
 });

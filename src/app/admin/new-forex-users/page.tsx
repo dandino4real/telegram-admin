@@ -762,6 +762,7 @@ import {
 import { NewForexUser } from '@/store/types/newForexUser';
 import { useSession } from '@/hooks/use-session';
 import { ChatDialog } from './component/chatDialog';
+import { truncate } from '@/lib/utils';
 
 const ITEMS_PER_PAGE = 20;
 
@@ -785,13 +786,14 @@ const getProgress = (u: NewForexUser) => {
 };
 
 // Memoized TableRow Component
-const TableRowMemo = React.memo(({ user, onCopy, setImageToView, setImageDialogOpen, setConfirmAction, setSelectedChatUser }: {
+const TableRowMemo = React.memo(({ user, onCopy, setImageToView, setImageDialogOpen, setConfirmAction, handleOpenChat }: {
   user: NewForexUser;
   onCopy: (loginId: string) => void;
   setImageToView: (url: string | null) => void;
   setImageDialogOpen: (open: boolean) => void;
   setConfirmAction: (action: { type: string; user: NewForexUser } | null) => void;
   setSelectedChatUser: (user: NewForexUser | null) => void;
+  handleOpenChat: (user: NewForexUser) => void;
 }) => {
   const [copiedId, setCopiedId] = useState<string | null>(null);
 
@@ -804,7 +806,7 @@ const TableRowMemo = React.memo(({ user, onCopy, setImageToView, setImageDialogO
   return (
     <TableRow>
       <TableCell>
-        <div className="font-medium">{user.fullName || user.username || user.telegramId}</div>
+        <div className="font-medium"> {truncate(user.fullName ?? user.telegramId ?? user.username ?? 'Unknown', 20)} </div>
       </TableCell>
       <TableCell>{user.broker}</TableCell>
       <TableCell>
@@ -846,9 +848,31 @@ const TableRowMemo = React.memo(({ user, onCopy, setImageToView, setImageDialogO
         </div>
       </TableCell>
       <TableCell>{user.createdAt ? format(new Date(user.createdAt), 'dd/MM/yyyy') : '-'}</TableCell>
-      <TableCell>
+      {/* <TableCell>
         <Button size="sm" variant="outline" onClick={() => setSelectedChatUser(user)}>
           💬 Chat
+        </Button>
+      </TableCell> */}
+      <TableCell>
+        <Button
+          size="sm"
+          variant="outline"
+          onClick={() => handleOpenChat(user)}
+          className="relative"
+        >
+          Chat
+          {/* Compute if last user message is unread */}
+          {user.messages && user.messages.length > 0 && (
+            (() => {
+              const lastMsg = user.messages[user.messages.length - 1];
+              return lastMsg.readByAdmin === false;
+            })() && (
+              <span className="absolute top-0 right-0 h-3 w-3">  {/* Slightly larger for visibility */}
+                <span className="absolute inline-flex h-full w-full rounded-full bg-red-500 opacity-75 animate-ping"></span>
+                <span className="relative inline-flex rounded-full h-3 w-3 bg-red-600"></span>  {/* Solid center dot */}
+              </span>
+            )
+          )}
         </Button>
       </TableCell>
       <TableCell>
@@ -917,7 +941,8 @@ TableRowMemo.displayName = 'TableRowMemo';
 export default function ForexUsersPage() {
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'pending' | 'awaiting_approval' | 'approved' | 'rejected'>('all');
-  const [brokerFilter, setBrokerFilter] = useState('');
+  const [brokerFilter, setBrokerFilter] = useState('all');
+  const [unreadFilter, setUnreadFilter] = useState<'all' | 'true' | 'false'>('all');
   const [page, setPage] = useState(1);
   const [imageToView, setImageToView] = useState<string | null>(null);
   const [isImageDialogOpen, setImageDialogOpen] = useState(false);
@@ -933,13 +958,15 @@ export default function ForexUsersPage() {
     skip: !adminId,
   });
 
- 
+
 
   const { data, isLoading, refetch, error: usersError, isFetching } = useGetNewForexUsersQuery({
     page,
     limit: ITEMS_PER_PAGE,
     search: search || undefined,
     status: statusFilter !== 'all' ? statusFilter : undefined,
+    broker: brokerFilter !== 'all' && brokerFilter ? brokerFilter : undefined,
+    hasUnreadMessages: unreadFilter,
   });
   const [approveForexLoginId] = useApproveForexLoginIdMutation();
   const [rejectForexLoginId] = useRejectForexLoginIdMutation();
@@ -954,32 +981,32 @@ export default function ForexUsersPage() {
   const { totalPages, pages } = usePagination(total, page, ITEMS_PER_PAGE);
 
   // Filter users based on search and filters
-  const filteredUsers = useMemo(() => {
-    return users.filter((user: NewForexUser) => {
-      const searchLower = search.toLowerCase();
-      const matchesSearch =
-        searchLower === '' ||
-        user.fullName?.toLowerCase().includes(searchLower) ||
-        user.username?.toLowerCase().includes(searchLower) ||
-        user.telegramId?.toLowerCase().includes(searchLower) ||
-        user.loginId?.toLowerCase().includes(searchLower) ||
-        user.broker?.toLowerCase().includes(searchLower);
-      const matchesStatus = statusFilter === 'all' || user.loginId_status === statusFilter;
-      const matchesBroker = brokerFilter === '' || user.broker === brokerFilter;
-      return matchesSearch && matchesStatus && matchesBroker;
-    });
-  }, [users, search, statusFilter, brokerFilter]);
+  // const filteredUsers = useMemo(() => {
+  //   return users.filter((user: NewForexUser) => {
+  //     const searchLower = search.toLowerCase();
+  //     const matchesSearch =
+  //       searchLower === '' ||
+  //       user.fullName?.toLowerCase().includes(searchLower) ||
+  //       user.username?.toLowerCase().includes(searchLower) ||
+  //       user.telegramId?.toLowerCase().includes(searchLower) ||
+  //       user.loginId?.toLowerCase().includes(searchLower) ||
+  //       user.broker?.toLowerCase().includes(searchLower);
+  //     const matchesStatus = statusFilter === 'all' || user.loginId_status === statusFilter;
+  //     const matchesBroker = brokerFilter === '' || user.broker === brokerFilter;
+  //     return matchesSearch && matchesStatus && matchesBroker;
+  //   });
+  // }, [users, search, statusFilter, brokerFilter]);
 
-  // Paginate filtered users
-  const paginatedUsers = useMemo(() => {
-    const startIndex = (page - 1) * ITEMS_PER_PAGE;
-    return filteredUsers.slice(startIndex, startIndex + ITEMS_PER_PAGE);
-  }, [filteredUsers, page]);
+  // // Paginate filtered users
+  // const paginatedUsers = useMemo(() => {
+  //   const startIndex = (page - 1) * ITEMS_PER_PAGE;
+  //   return filteredUsers.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+  // }, [filteredUsers, page]);
 
   // Reset page when filters change
   useEffect(() => {
     setPage(1);
-  }, [search, statusFilter, brokerFilter]);
+  }, [search, statusFilter, brokerFilter, unreadFilter]);
 
   // Periodic refetch
   useEffect(() => {
@@ -1033,11 +1060,11 @@ export default function ForexUsersPage() {
             id: user._id,
             reason:
               rejectionReason === "deposit_missing" ||
-              rejectionReason === "deposit_incomplete" ||
-              rejectionReason === "wrong_link" ||
-              rejectionReason === "demo_account" ||
-              rejectionReason === "duplicate_id" ||
-              rejectionReason === "other"
+                rejectionReason === "deposit_incomplete" ||
+                rejectionReason === "wrong_link" ||
+                rejectionReason === "demo_account" ||
+                rejectionReason === "duplicate_id" ||
+                rejectionReason === "other"
                 ? rejectionReason
                 : "other",
             customReason:
@@ -1108,9 +1135,9 @@ export default function ForexUsersPage() {
       type ErrorWithMessage = { data?: { message?: string } };
       const message =
         typeof err === "object" &&
-        err !== null &&
-        "data" in err &&
-        typeof (err as ErrorWithMessage).data?.message === "string"
+          err !== null &&
+          "data" in err &&
+          typeof (err as ErrorWithMessage).data?.message === "string"
           ? (err as ErrorWithMessage).data!.message
           : "Action failed";
       toast.error(message);
@@ -1131,14 +1158,24 @@ export default function ForexUsersPage() {
     setSearch('');
     setStatusFilter('all');
     setBrokerFilter('');
+    setUnreadFilter('all');  // NEW: Reset unread filter
     setPage(1);
   };
 
-   if (adminData && adminData.role === 'admin_crypto') {
+  // NEW: Handle opening chat and marking read
+  const handleOpenChat = async (user: NewForexUser) => {
+    setSelectedChatUser(user);
+    if (user.hasUnreadMessages) {
+      // await markRead({ telegramId: user.telegramId }).unwrap();
+      refetch();  // Refresh table to update flags
+    }
+  };
+
+  if (adminData && adminData.role === 'admin_crypto') {
     return null
   }
 
-  if (isAdminLoading || !adminData ) {
+  if (isAdminLoading || !adminData) {
     return <div>Loading admin profile...</div>;
   }
 
@@ -1207,6 +1244,17 @@ export default function ForexUsersPage() {
                     <SelectItem value="AXI">AXI</SelectItem>
                     <SelectItem value="Oanda">Oanda</SelectItem>
                     <SelectItem value="Exco">Exco</SelectItem>
+                    {/* NEW: Unread filter dropdown */}
+                    <Select value={unreadFilter} onValueChange={(v: 'all' | 'true' | 'false') => setUnreadFilter(v)}>
+                      <SelectTrigger className="w-full sm:w-[180px]">
+                        <SelectValue placeholder="Chat Unread" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All Chats</SelectItem>
+                        <SelectItem value="true">Unread Only</SelectItem>
+                        <SelectItem value="false">Read Only</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </SelectContent>
                 </Select>
               </div>
@@ -1230,8 +1278,8 @@ export default function ForexUsersPage() {
               <TableBody>
                 {isLoading ? (
                   <TableRow><TableCell colSpan={8}>Loading...</TableCell></TableRow>
-                ) : paginatedUsers.length ? (
-                  paginatedUsers.map((user: NewForexUser) => (
+                ) : users.length ? (
+                  users.map((user: NewForexUser) => (
                     <TableRowMemo
                       key={user._id}
                       user={user}
@@ -1240,6 +1288,7 @@ export default function ForexUsersPage() {
                       setImageDialogOpen={setImageDialogOpen}
                       setConfirmAction={setConfirmAction}
                       setSelectedChatUser={setSelectedChatUser}
+                      handleOpenChat={handleOpenChat}
                     />
                   ))
                 ) : (
@@ -1400,13 +1449,13 @@ export default function ForexUsersPage() {
 function StatusBadge({ label, status }: { label: string; status?: string }) {
   const color =
     status === 'approved' ? 'bg-green-100 text-green-800' :
-    status === 'rejected' ? 'bg-red-100 text-red-800' :
-    status === 'awaiting_approval' ? 'bg-blue-100 text-blue-800' :
-    'bg-yellow-100 text-yellow-800';
+      status === 'rejected' ? 'bg-red-100 text-red-800' :
+        status === 'awaiting_approval' ? 'bg-blue-100 text-blue-800' :
+          'bg-yellow-100 text-yellow-800';
   const icon =
     status === 'approved' ? <CheckCircle className="w-3 h-3 mr-1" /> :
-    status === 'rejected' ? <XCircle className="w-3 h-3 mr-1" /> :
-    <Clock className="w-3 h-3 mr-1" />;
+      status === 'rejected' ? <XCircle className="w-3 h-3 mr-1" /> :
+        <Clock className="w-3 h-3 mr-1" />;
   return (
     <Badge className={`${color} justify-start gap-1`}>
       {icon} {label}: {status?.replace('_', ' ')}

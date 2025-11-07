@@ -388,12 +388,27 @@ export const api = createApi({
           totalPages: number;
         };
       },
-      { page: number; limit: number; search?: string; status?: string; broker?: string; hasUnreadMessages?: 'true' | 'false' | 'all' }
+      {
+        page: number;
+        limit: number;
+        search?: string;
+        status?: string;
+        broker?: string;
+        hasUnreadMessages?: "true" | "false" | "all";
+      }
     >({
-      query: ({ page, limit, search, status,broker, hasUnreadMessages }) => ({
+      query: ({ page, limit, search, status, broker, hasUnreadMessages }) => ({
         url: "/api/new-forex-users",
         method: REST_API_VERBS.GET,
-        params: { page, limit, search, status, broker, hasUnreadMessages: hasUnreadMessages === 'all' ? undefined : hasUnreadMessages },
+        params: {
+          page,
+          limit,
+          search,
+          status,
+          broker,
+          hasUnreadMessages:
+            hasUnreadMessages === "all" ? undefined : hasUnreadMessages,
+        },
       }),
       transformResponse: (
         response: { users: NewForexUser[]; total: number },
@@ -538,6 +553,17 @@ export const api = createApi({
         }>;
       }) => response,
     }),
+
+    approveNewForexUser: builder.mutation<
+      { message: string; user: NewForexUser },
+      { id: string }
+    >({
+      query: ({ id }) => ({
+        url: `/api/new-forex-users/approve/${id}`,
+        method: REST_API_VERBS.PUT,
+      }),
+      invalidatesTags: ["NewForexUsers", "UserStats"],
+    }),
   }),
 });
 
@@ -572,4 +598,5 @@ export const {
   useRejectForexTestTradesScreenshotMutation,
   useDeleteNewForexUserMutation,
   useGetChatMessgesQuery,
+  useApproveNewForexUserMutation,
 } = api;

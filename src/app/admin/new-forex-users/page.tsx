@@ -132,11 +132,7 @@ const TableRowMemo = React.memo(({ user, onCopy, setImageToView, setImageDialogO
         </div>
       </TableCell>
       <TableCell>{user.createdAt ? format(new Date(user.createdAt), 'dd/MM/yyyy') : '-'}</TableCell>
-      {/* <TableCell>
-        <Button size="sm" variant="outline" onClick={() => setSelectedChatUser(user)}>
-          💬 Chat
-        </Button>
-      </TableCell> */}
+
       <TableCell>
         <Button
           size="sm"
@@ -178,15 +174,6 @@ const TableRowMemo = React.memo(({ user, onCopy, setImageToView, setImageDialogO
                   Reject Login
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem
-                  onClick={() => setConfirmAction({ type: 'approve-user', user })}
-                >
-                  <CheckCircle className="mr-2 w-4 h-4 text-green-600" />
-                  Approve All
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-
-
 
               </>
             )}
@@ -201,13 +188,7 @@ const TableRowMemo = React.memo(({ user, onCopy, setImageToView, setImageDialogO
                   Reject Account Screenshot
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
-                 <DropdownMenuItem
-                  onClick={() => setConfirmAction({ type: 'approve-user', user })}
-                >
-                  <CheckCircle className="mr-2 w-4 h-4 text-green-600" />
-                  Approve All
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
+
               </>
             )}
             {(user.testTradesScreenshotUrl_status === 'awaiting_approval' || user.testTradesScreenshotUrl_status === 'rejected') && (
@@ -221,22 +202,31 @@ const TableRowMemo = React.memo(({ user, onCopy, setImageToView, setImageDialogO
                   Reject Test Trades
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
-                 <DropdownMenuItem
-                  onClick={() => setConfirmAction({ type: 'approve-user', user })}
-                >
-                  <CheckCircle className="mr-2 w-4 h-4 text-green-600" />
-                  Approve All
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
+
               </>
             )}
-            <DropdownMenuItem
-              className="text-red-600"
-              onClick={() => setConfirmAction({ type: 'delete', user })}
-            >
-              <Trash className="mr-2 w-4 h-4" />
-              Delete User
-            </DropdownMenuItem>
+            <>
+
+              {(user.loginId_status !== 'approved' || user.screenshotUrl_status !== 'approved' || user.testTradesScreenshotUrl_status !== 'approved') && (
+                <>
+                  <DropdownMenuItem
+                    onClick={() => setConfirmAction({ type: 'approve-user', user })}
+                  >
+                    <CheckCircle className="mr-2 w-4 h-4 text-green-600" />
+                    Approve All
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                </>
+              )
+              }
+              <DropdownMenuItem
+                className="text-red-600"
+                onClick={() => setConfirmAction({ type: 'delete', user })}
+              >
+                <Trash className="mr-2 w-4 h-4" />
+                Delete User
+              </DropdownMenuItem>
+            </>
           </DropdownMenuContent>
         </DropdownMenu>
       </TableCell>

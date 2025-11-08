@@ -201,6 +201,13 @@ const TableRowMemo = React.memo(({ user, onCopy, setImageToView, setImageDialogO
                   Reject Account Screenshot
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
+                 <DropdownMenuItem
+                  onClick={() => setConfirmAction({ type: 'approve-user', user })}
+                >
+                  <CheckCircle className="mr-2 w-4 h-4 text-green-600" />
+                  Approve All
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
               </>
             )}
             {(user.testTradesScreenshotUrl_status === 'awaiting_approval' || user.testTradesScreenshotUrl_status === 'rejected') && (
@@ -212,6 +219,13 @@ const TableRowMemo = React.memo(({ user, onCopy, setImageToView, setImageDialogO
                 <DropdownMenuItem onClick={() => setConfirmAction({ type: 'reject-test', user })}>
                   <XCircle className="mr-2 w-4 h-4 text-red-600" />
                   Reject Test Trades
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                 <DropdownMenuItem
+                  onClick={() => setConfirmAction({ type: 'approve-user', user })}
+                >
+                  <CheckCircle className="mr-2 w-4 h-4 text-green-600" />
+                  Approve All
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
               </>

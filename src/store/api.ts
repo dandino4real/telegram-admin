@@ -411,7 +411,10 @@ export const api = createApi({
         },
       }),
       transformResponse: (
-        response: { users: NewForexUser[]; total: number },
+        response: {
+          users: NewForexUser[];
+          pagination: { total: number; totalPages: number };
+        },
         meta,
         arg
       ) => ({
@@ -419,8 +422,8 @@ export const api = createApi({
         meta: {
           page: arg.page,
           limit: arg.limit,
-          total: response.total,
-          totalPages: Math.ceil(response.total / arg.limit),
+          total: response.pagination.total,
+          totalPages: response.pagination.totalPages,
         },
       }),
       providesTags: ["NewForexUsers"],

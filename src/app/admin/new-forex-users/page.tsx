@@ -279,29 +279,6 @@ export default function ForexUsersPage() {
   const total = data?.meta?.total || 0;
   const { totalPages, pages } = usePagination(total, page, ITEMS_PER_PAGE);
 
-  // Filter users based on search and filters
-  // const filteredUsers = useMemo(() => {
-  //   return users.filter((user: NewForexUser) => {
-  //     const searchLower = search.toLowerCase();
-  //     const matchesSearch =
-  //       searchLower === '' ||
-  //       user.fullName?.toLowerCase().includes(searchLower) ||
-  //       user.username?.toLowerCase().includes(searchLower) ||
-  //       user.telegramId?.toLowerCase().includes(searchLower) ||
-  //       user.loginId?.toLowerCase().includes(searchLower) ||
-  //       user.broker?.toLowerCase().includes(searchLower);
-  //     const matchesStatus = statusFilter === 'all' || user.loginId_status === statusFilter;
-  //     const matchesBroker = brokerFilter === '' || user.broker === brokerFilter;
-  //     return matchesSearch && matchesStatus && matchesBroker;
-  //   });
-  // }, [users, search, statusFilter, brokerFilter]);
-
-  // // Paginate filtered users
-  // const paginatedUsers = useMemo(() => {
-  //   const startIndex = (page - 1) * ITEMS_PER_PAGE;
-  //   return filteredUsers.slice(startIndex, startIndex + ITEMS_PER_PAGE);
-  // }, [filteredUsers, page]);
-
   // Reset page when filters change
   useEffect(() => {
     setPage(1);

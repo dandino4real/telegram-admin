@@ -129,12 +129,10 @@ export const createAxiosInstance = (
 
           return instance(originalRequest);
         } catch (refreshErr) {
-          console.log("Token refresh failed:", refreshErr);
           processQueue(refreshErr);
           dispatch(clearSession());
           setAccessToken(null);
           if (typeof window !== "undefined") {
-            console.log("Redirecting to /login due to failed token refresh");
             window.location.href = "/login";
           }
           return Promise.reject(refreshErr);

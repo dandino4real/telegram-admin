@@ -16,6 +16,7 @@ import {
 import { setAccessToken } from "@/lib/authManager";
 import { setSession } from "./sessionStore";
 import { NewForexUser } from "./types/newForexUser";
+import { Afibe10XUser } from "./types/afibe10xUser";
 
 export type UserStats = {
   totalApprovedUsers: number;
@@ -38,6 +39,7 @@ export const api = createApi({
     "ForexUsers",
     "UserStats",
     "NewForexUsers",
+    "Afibe10XUsers",
   ],
 
   refetchOnFocus: true,
@@ -57,7 +59,6 @@ export const api = createApi({
 
           if (data.accessToken && data.id) {
             setAccessToken(data.accessToken);
-            console.log("api: Access token set in memory");
 
             // Dispatch setSession with both refreshToken and user ID
             dispatch(
@@ -290,11 +291,11 @@ export const api = createApi({
         limit: number;
         search?: string;
         status?:
-          | "pending"
-          | "awaiting_approver"
-          | "approved"
-          | "rejected"
-          | "all";
+        | "pending"
+        | "awaiting_approver"
+        | "approved"
+        | "rejected"
+        | "all";
         startDate?: string;
         endDate?: string;
       }
@@ -444,12 +445,12 @@ export const api = createApi({
       {
         id: string;
         reason:
-          | "deposit_missing"
-          | "deposit_incomplete"
-          | "duplicate_id"
-          | "wrong_link"
-          | "demo_account"
-          | "other";
+        | "deposit_missing"
+        | "deposit_incomplete"
+        | "duplicate_id"
+        | "wrong_link"
+        | "demo_account"
+        | "other";
         customReason?: string;
       }
     >({
@@ -567,6 +568,89 @@ export const api = createApi({
       }),
       invalidatesTags: ["NewForexUsers", "UserStats"],
     }),
+
+    getAfibe10XUsers: builder.query<
+      {
+        data: Afibe10XUser[];
+        meta: {
+          page: number;
+          limit: number;
+          total: number;
+          totalPages: number;
+        };
+      },
+      {
+        page: number;
+        limit: number;
+        search?: string;
+        status?: string;
+      }
+    >({
+      query: ({ page, limit, search, status }) => ({
+        url: "/api/users/afibe10x",
+        method: REST_API_VERBS.GET,
+        params: {
+          page,
+          limit,
+          search,
+          status: status === "all" ? undefined : status,
+        },
+      }),
+      transformResponse: (
+        response: {
+          users: Afibe10XUser[];
+          pagination: { total: number; totalPages: number };
+        },
+        meta,
+        arg
+      ) => ({
+        data: response.users,
+        meta: {
+          page: arg.page,
+          limit: arg.limit,
+          total: response.pagination.total,
+          totalPages: response.pagination.totalPages,
+        },
+      }),
+      providesTags: ["Afibe10XUsers"],
+    }),
+
+    approveAfibe10XUser: builder.mutation<
+      { message: string; user: Afibe10XUser },
+      { id: string }
+    >({
+      query: ({ id }) => ({
+        url: `/api/users/afibe10x/${id}/approve`,
+        method: REST_API_VERBS.PATCH,
+      }),
+      invalidatesTags: ["Afibe10XUsers", "UserStats"],
+    }),
+
+    rejectAfibe10XUser: builder.mutation<
+      { message: string; user: Afibe10XUser },
+      {
+        id: string;
+        rejectionReason: "no_deposit" | "wrong_link";
+      }
+    >({
+      query: ({ id, rejectionReason }) => ({
+        url: `/api/users/afibe10x/${id}/reject`,
+        method: REST_API_VERBS.PATCH,
+        data: { rejectionReason },
+      }),
+      invalidatesTags: ["Afibe10XUsers", "UserStats"],
+    }),
+
+    deleteAfibe10XUser: builder.mutation<
+      { message: string },
+      { id: string }
+    >({
+      query: ({ id }) => ({
+        url: `/api/users/afibe10x/${id}`,
+        method: REST_API_VERBS.DELETE,
+      }),
+      invalidatesTags: ["Afibe10XUsers", "UserStats"],
+    }),
   }),
 });
 
@@ -602,4 +686,8 @@ export const {
   useDeleteNewForexUserMutation,
   useGetChatMessgesQuery,
   useApproveNewForexUserMutation,
+  useGetAfibe10XUsersQuery,
+  useApproveAfibe10XUserMutation,
+  useRejectAfibe10XUserMutation,
+  useDeleteAfibe10XUserMutation,
 } = api;

@@ -75,7 +75,7 @@
 //   );
 //   console.log({adminProfile})
 
- 
+
 //   React.useEffect(() => {
 //     if (!isRestoring && !isLoggedIn) {
 //       console.log('AppSidebar: Not logged in, redirecting to /login');
@@ -168,7 +168,7 @@
 
 'use client';
 
-import { Bot, DollarSign, Home, TrendingUp, UsersIcon } from 'lucide-react';
+import { Bot, DollarSign, Home, TrendingUp, UsersIcon, Trophy } from 'lucide-react';
 import React from 'react';
 import {
   Sidebar,
@@ -209,6 +209,11 @@ const data = {
           title: 'Forex Users',
           url: '/admin/new-forex-users',
           icon: TrendingUp,
+        },
+        {
+          title: 'Trade Challenge',
+          url: '/admin/trade-challenge',
+          icon: Trophy,
         },
       ],
     },
@@ -264,7 +269,8 @@ function AppSidebar() {
             allowedItems = item.items.filter(
               (i) =>
                 i.url === '/admin/crypto-users' ||
-                i.url === '/admin/new-forex-users'
+                i.url === '/admin/new-forex-users' ||
+                i.url === '/admin/trade-challenge'
             );
             break;
           case 'superadmin':

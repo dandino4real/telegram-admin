@@ -6,7 +6,7 @@ import ClientSidebarWrapper from '@/components/sidebarWrapper';
 
 export const metadata: Metadata = {
   title: 'Afibie Bot Admin Dashboard',
-  description: 'Admin dashboard for Telegram referral bot management',
+  description: 'Admin dashboard for afibie 10X_trade_challenge ',
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

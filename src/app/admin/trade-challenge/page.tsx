@@ -70,12 +70,11 @@ const TableRowMemo = React.memo(({ user, onCopy, setConfirmAction, handleOpenCha
 
     return (
         <TableRow>
-            <TableCell>
-                <StatusBadge label="Status" status={user.status} />
-            </TableCell>
+        
             <TableCell>
                 <div className="font-medium"> {truncate(user.fullName ?? user.username ?? user.telegramId ?? 'Unknown', 20)} </div>
-                <div className="text-xs text-muted-foreground">@{user.username || 'No username'}</div>
+                <div className="text-xs text-muted-foreground" title={user.username ?? 'No username'}> @{truncate(user.username ?? 'No username', 16)}</div>
+
             </TableCell>
             <TableCell>
                 <div className="flex items-center gap-2">
@@ -90,6 +89,9 @@ const TableRowMemo = React.memo(({ user, onCopy, setConfirmAction, handleOpenCha
                         </button>
                     )}
                 </div>
+            </TableCell>
+                <TableCell>
+                <StatusBadge label="Status" status={user.status} />
             </TableCell>
             <TableCell>{user.createdAt ? format(new Date(user.createdAt), 'dd/MM/yyyy') : '-'}</TableCell>
 
@@ -338,9 +340,9 @@ export default function TradeChallengePage() {
                         <Table>
                             <TableHeader>
                                 <TableRow>
-                                    <TableHead>Status</TableHead>
                                     <TableHead>User</TableHead>
                                     <TableHead>WEEX UID</TableHead>
+                                    <TableHead>Status</TableHead>
                                     <TableHead>Date</TableHead>
                                     <TableHead>Chat</TableHead>
                                     <TableHead>Actions</TableHead>

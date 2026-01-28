@@ -31,24 +31,14 @@ export const useSession = (): Session => {
 
   useEffect(() => {
     const restoreSession = async () => {
-      console.log("useSession: Checking session", {
-        refreshToken,
-        userId: user?.id,
-        hasAccessToken: !!getAccessToken(),
-        sessionStorage:
-          typeof window !== "undefined"
-            ? window.sessionStorage.getItem("persist:root")
-            : null,
-      });
+    
 
       if (refreshToken && user?.id) {
         if (!getAccessToken()) {
           if (isLoading) {
-            console.log("useSession: Waiting for validateToken query");
             return;
           }
           if (data?.message === "Valid token") {
-            console.log("useSession: Valid session, refreshing access token");
             try {
               const response = await fetch(
                 `${process.env.NEXT_PUBLIC_API_URL}/api/auth/refresh-token`,
@@ -62,10 +52,6 @@ export const useSession = (): Session => {
                 }
               );
 
-              console.log(
-                "useSession: Refresh token response status:",
-                response.status
-              );
 
               if (!response.ok) {
                 const errorData: ApiError = await response.json();
@@ -75,10 +61,7 @@ export const useSession = (): Session => {
               }
 
               const responseData = await response.json();
-              console.log(
-                "useSession: Refresh token response data:",
-                responseData
-              );
+          
 
               if (responseData.accessToken && responseData.id) {
                 setAccessToken(responseData.accessToken);
@@ -88,18 +71,17 @@ export const useSession = (): Session => {
                     user: { id: responseData.id },
                   })
                 );
-                console.log("useSession: Session restored successfully");
               } else {
                 throw new Error("Invalid refresh token response");
               }
             } catch (err: unknown) {
               if (err instanceof Error) {
-                console.error(
+                console.log(
                   "useSession: Session restoration failed:",
                   err.message
                 );
               } else {
-                console.error("useSession: Session restoration failed:", err);
+                console.log("useSession: Session restoration failed:", err);
               }
 
               dispatch(clearSession());
@@ -107,7 +89,7 @@ export const useSession = (): Session => {
               router.push("/login");
             }
           } else if (error) {
-            console.error(
+            console.log(
               "useSession: Token validation failed:",
               (error as { data?: ApiError }).data?.message || error
             );
@@ -144,7 +126,6 @@ export const useSession = (): Session => {
     isLoggedIn: !!refreshToken && !!user?.id && !!getAccessToken(),
     isRestoring,
   };
-  console.log("useSession: Returning session state", sessionState);
 
   return sessionState;
 };

@@ -232,6 +232,7 @@
 
 
 
+
 "use client";
 
 import React, { useEffect, useRef, useState, useMemo } from "react";
@@ -271,15 +272,22 @@ export function ChatDialog({
     const [wsMessages, setWsMessages] = useState<ChatMessage[]>([]);
     const [input, setInput] = useState("");
     const [wsConnected, setWsConnected] = useState(false);
+    const [connectionStatus, setConnectionStatus] = useState("disconnected");
+    const [retryCount, setRetryCount] = useState(0);
     const wsRef = useRef<WebSocket | null>(null);
     const scrollRef = useRef<HTMLDivElement>(null);
+    const heartbeatRef = useRef<NodeJS.Timeout | null>(null);
 
+    const MAX_RETRIES = 3;
     const telegramId = user?.telegramId || "";
     const username = user?.username || user?.fullName || "User";
 
     // Reset messages when dialog opens/closes or user changes
     useEffect(() => {
-        if (open) setWsMessages([]);
+        if (open) {
+            setWsMessages([]);
+            setRetryCount(0);
+        }
     }, [open, telegramId]);
 
     // Initial messages from user object
@@ -295,55 +303,148 @@ export function ChatDialog({
 
     const allMessages = useMemo(() => [...historyMessages, ...wsMessages], [historyMessages, wsMessages]);
 
-    // WebSocket connection
+    // WebSocket connection with retry mechanism
     useEffect(() => {
         if (!open || !telegramId) {
             if (wsRef.current) {
                 wsRef.current.close();
                 wsRef.current = null;
             }
+            if (heartbeatRef.current) {
+                clearInterval(heartbeatRef.current);
+                heartbeatRef.current = null;
+            }
             setWsConnected(false);
+            setConnectionStatus("disconnected");
             return;
         }
 
-        const apiUrl = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000/api";
-        const wsUrl = apiUrl.replace(/^http/, "ws");
-        const ws = new WebSocket(`${wsUrl}/afibe10x-chat?adminId=${adminId}`);
-        wsRef.current = ws;
+        const connectWebSocket = () => {
+            const apiUrl = process.env.NEXT_PUBLIC_API_URL!;
+            // const isSecure = apiUrl.startsWith('https');
+            // const wsProtocol = isSecure ? 'wss' : 'ws';
+            // const baseUrl = apiUrl.replace(/^https?:\/\//, '');
+            // const wsUrl = `${wsProtocol}://${baseUrl}/afibe10x-chat?adminId=${adminId}`;
+            const wsUrl = apiUrl
+                            .replace(/^http/, "ws")
+                            .replace(/\/$/, "");
+            
+            
+            // const ws = new WebSocket(wsUrl);
+            const ws = new WebSocket(`${wsUrl}/afibe10x-chat?adminId=${encodeURIComponent(adminId)}`
+);
+           
+            wsRef.current = ws;
 
-        ws.onopen = () => {
-            console.log("Chat WebSocket connected");
-            setWsConnected(true);
-            ws.send(JSON.stringify({ type: "start_chat", telegramId }));
-        };
+            ws.onopen = () => {
+                console.log("✅ Chat WebSocket connected");
+                setWsConnected(true);
+                setConnectionStatus("connected");
+                setRetryCount(0);
+                
+                // Send start chat message
+                ws.send(JSON.stringify({ 
+                    type: "start_chat", 
+                    telegramId,
+                    timestamp: new Date().toISOString()
+                }));
+                
+                // Start heartbeat
+                heartbeatRef.current = setInterval(() => {
+                    if (ws.readyState === WebSocket.OPEN) {
+                        ws.send(JSON.stringify({ type: "ping" }));
+                    }
+                }, 25000);
+            };
 
-        ws.onclose = () => {
-            console.log("Chat WebSocket closed");
-            setWsConnected(false);
-        };
-
-        ws.onerror = (err) => console.log("WebSocket error:", err);
-
-        ws.onmessage = (event) => {
-            try {
-                const parsedData = JSON.parse(event.data);
-                if (parsedData.type === "user_message" && parsedData.telegramId === telegramId) {
-                    setWsMessages((prev) => [
-                        ...prev,
-                        { sender: "user", user: "User", text: parsedData.text, timestamp: parsedData.time },
-                    ]);
+            ws.onmessage = (event) => {
+                try {
+                    const parsedData = JSON.parse(event.data);
+                    console.log("📨 Received WebSocket message:", parsedData);
+                    
+                    switch (parsedData.type) {
+                        case "connection_established":
+                            console.log("✅ WebSocket connection confirmed by server");
+                            break;
+                        case "chat_started":
+                            console.log("✅ Chat session started on server");
+                            break;
+                        case "user_message":
+                            if (parsedData.telegramId === telegramId) {
+                                setWsMessages((prev) => [
+                                    ...prev,
+                                    { 
+                                        sender: "user", 
+                                        user: "User", 
+                                        text: parsedData.text, 
+                                        timestamp: parsedData.time 
+                                    },
+                                ]);
+                            }
+                            break;
+                        case "message_sent":
+                            console.log("✅ Message delivered to server");
+                            break;
+                        case "pong":
+                            // Heartbeat response - do nothing
+                            break;
+                        case "error":
+                            console.log("❌ Server error:", parsedData.error);
+                            break;
+                        default:
+                            console.log("Received unknown message type:", parsedData.type);
+                    }
+                } catch (e) {
+                    console.log("❌ WS Message Parse Error", e);
                 }
-            } catch (e) {
-                console.error("WS Message Parse Error", e);
-            }
+            };
+
+            ws.onclose = (event) => {
+                console.log("❌ WebSocket closed:", {
+                    code: event.code,
+                    reason: event.reason,
+                    wasClean: event.wasClean
+                });
+                
+                if (heartbeatRef.current) {
+                    clearInterval(heartbeatRef.current);
+                    heartbeatRef.current = null;
+                }
+                
+                setWsConnected(false);
+                setConnectionStatus(`disconnected (code: ${event.code})`);
+                
+                // Auto-reconnect logic
+                if (retryCount < MAX_RETRIES && open) {
+                    const delay = Math.min(1000 * Math.pow(2, retryCount), 10000);
+                    console.log(`🔄 Will retry connection in ${delay}ms (attempt ${retryCount + 1}/${MAX_RETRIES})`);
+                    
+                    const timeoutId = setTimeout(() => {
+                        setRetryCount(prev => prev + 1);
+                    }, delay);
+                    
+                    return () => clearTimeout(timeoutId);
+                }
+            };
+
+            ws.onerror = (err) => {
+                console.log("❌ WebSocket error:", err);
+                setConnectionStatus("error");
+            };
+
+            return () => {
+                if (heartbeatRef.current) {
+                    clearInterval(heartbeatRef.current);
+                }
+                if (ws.readyState === WebSocket.OPEN) {
+                    ws.close();
+                }
+            };
         };
 
-        return () => {
-            ws.close();
-            wsRef.current = null;
-            setWsConnected(false);
-        };
-    }, [open, telegramId, adminId]);
+        const cleanup = connectWebSocket();
+        return cleanup;
+    }, [open, telegramId, adminId, retryCount]);
 
     // Auto-scroll
     useEffect(() => {
@@ -354,8 +455,17 @@ export function ChatDialog({
 
     // Send message
     const sendMessage = () => {
-        if (!input.trim() || !wsRef.current || !wsConnected) {
-            console.error("WebSocket not open. Cannot send message.");
+        if (!input.trim()) {
+            console.log("❌ Message is empty");
+            return;
+        }
+        
+        if (!wsRef.current || !wsConnected) {
+            console.log("❌ WebSocket not connected. Current state:", {
+                wsRefExists: !!wsRef.current,
+                wsConnected,
+                readyState: wsRef.current?.readyState
+            });
             return;
         }
 
@@ -363,24 +473,48 @@ export function ChatDialog({
         const timestamp = new Date().toISOString();
 
         // Optimistic append
-        setWsMessages((prev) => [...prev, { sender: "admin", user: "Admin", text: msg, timestamp }]);
+        setWsMessages((prev) => [...prev, { 
+            sender: "admin", 
+            user: "Admin", 
+            text: msg, 
+            timestamp 
+        }]);
 
-        wsRef.current.send(
-            JSON.stringify({
-                type: "admin_reply",
-                telegramId,
-                message: msg,
-            })
-        );
-
-        setInput("");
+        try {
+            wsRef.current.send(
+                JSON.stringify({
+                    type: "admin_reply",
+                    telegramId,
+                    message: msg,
+                    timestamp: new Date().toISOString()
+                })
+            );
+            console.log("📤 Message sent to WebSocket");
+            setInput("");
+        } catch (error) {
+            console.log("❌ Failed to send message via WebSocket:", error);
+            // Remove optimistic update on error
+            setWsMessages((prev) => prev.slice(0, -1));
+        }
     };
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
             <DialogContent className="max-w-lg">
                 <DialogHeader>
-                    <DialogTitle>Chat with {username}</DialogTitle>
+                    <DialogTitle className="flex justify-between items-center">
+                        <span>Chat with {username}</span>
+                        <div className="flex items-center gap-2">
+                            <span className={`text-xs px-2 py-1 rounded ${wsConnected ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+                                {wsConnected ? '🟢 Connected' : `🔴 ${connectionStatus}`}
+                            </span>
+                            {retryCount > 0 && (
+                                <span className="text-xs text-gray-500">
+                                    Retry: {retryCount}/{MAX_RETRIES}
+                                </span>
+                            )}
+                        </div>
+                    </DialogTitle>
                 </DialogHeader>
 
                 <div className="border rounded-md p-2 bg-muted/30">
@@ -425,7 +559,10 @@ export function ChatDialog({
                         onKeyDown={(e) => e.key === "Enter" && sendMessage()}
                         disabled={!wsConnected}
                     />
-                    <Button onClick={sendMessage} disabled={!wsConnected}>
+                    <Button 
+                        onClick={sendMessage} 
+                        disabled={!wsConnected || !input.trim()}
+                    >
                         Send
                     </Button>
                 </DialogFooter>

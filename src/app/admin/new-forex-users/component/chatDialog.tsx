@@ -84,8 +84,13 @@ export function ChatDialog({
       return;
     }
 
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000/api";
+
+
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3000/api";
     const wsUrl = apiUrl.replace("http", "ws");
+    console.log("WS CONNECTING TO:", `${wsUrl}/forex-chat?adminId=${adminId}`);
+
+
     const ws = new WebSocket(`${wsUrl}/forex-chat?adminId=${adminId}`);
 
     wsRef.current = ws;
@@ -118,20 +123,38 @@ export function ChatDialog({
   }, [allMessages]);
 
   const sendMessage = () => {
-    if (!input.trim() || !wsRef.current) return;
+    // if (!input.trim() || !wsRef.current) return;
+    if (!input.trim()) return;
+
+    const ws = wsRef.current;
+
+    if (!ws || ws.readyState !== WebSocket.OPEN) {
+    console.warn(`Cannot send: WS readyState=${ws?.readyState || 'null'}}`);
+    return;
+  }
+
     const msg = input.trim();
     const timestamp = new Date().toISOString();
 
     // Optimistically append to WS state
     setWsMessages((prev) => [...prev, { sender: "admin", user: "Admin", text: msg, timestamp }]);
 
-    wsRef.current.send(
-      JSON.stringify({
-        type: "admin_reply",
-        telegramId,
-        message: msg,
-      })
-    );
+    // wsRef.current.send(
+    //   JSON.stringify({
+    //     type: "admin_reply",
+    //     telegramId,
+    //     message: msg,
+    //   })
+    // );
+
+    ws.send(
+    JSON.stringify({
+      type: "admin_reply",
+      telegramId,
+      message: msg,
+      timestamp,
+    })
+  );
 
     setInput("");
   };
@@ -207,3 +230,332 @@ export function ChatDialog({
     </Dialog>
   );
 }
+
+
+
+
+// "use client";
+
+// import React, { useEffect, useRef, useState } from "react";
+// import {
+//   Dialog,
+//   DialogContent,
+//   DialogHeader,
+//   DialogTitle,
+//   DialogFooter,
+// } from "@/components/ui/dialog";
+// import { Button } from "@/components/ui/button";
+// import { Input } from "@/components/ui/input";
+// import { ScrollArea } from "@/components/ui/scroll-area";
+// import { format } from "date-fns";
+// import { useGetChatMessgesQuery } from "@/store/api";
+
+// interface ChatMessage {
+//   sender: "user" | "admin";
+//   user: "Admin" | "User";
+//   text: string;
+//   timestamp: string;
+// }
+
+// interface ChatDialogProps {
+//   open: boolean;
+//   onOpenChange: (open: boolean) => void;
+//   telegramId: string;
+//   username: string;
+//   adminId: string;
+// }
+
+// export function ChatDialog({
+//   open,
+//   onOpenChange,
+//   telegramId,
+//   username,
+//   adminId,
+// }: ChatDialogProps) {
+//   const [wsMessages, setWsMessages] = useState<ChatMessage[]>([]);
+//   const [input, setInput] = useState("");
+//   const [wsConnected, setWsConnected] = useState(false);
+//   const [connectionError, setConnectionError] = useState<string | null>(null);
+//   const wsRef = useRef<WebSocket | null>(null);
+//   const scrollRef = useRef<HTMLDivElement>(null);
+
+//   const { data, isFetching, refetch } = useGetChatMessgesQuery(
+//     { telegramId },
+//     { 
+//       skip: !open,
+//       refetchOnMountOrArgChange: true,
+//     }
+//   );
+
+//   useEffect(() => {
+//     if (open) {
+//       setWsMessages([]);
+//       setConnectionError(null);
+//       refetch();
+//     }
+//   }, [open, refetch]);
+
+//   const historyMessages: ChatMessage[] = React.useMemo(() => {
+//     if (!data) return [];
+//     return data.messages.map((msg: { sender: "user" | "admin"; text: string; timestamp: string }) => ({
+//       ...msg,
+//       user: msg.sender === "admin" ? "Admin" : "User",
+//     }));
+//   }, [data]);
+
+//   const allMessages = React.useMemo(
+//     () => [...historyMessages, ...wsMessages],
+//     [historyMessages, wsMessages]
+//   );
+
+//   // WebSocket Effect - UPDATED
+//   useEffect(() => {
+//     if (!open || !telegramId) {
+//       if (wsRef.current) {
+//         wsRef.current.close();
+//         wsRef.current = null;
+//       }
+//       setWsConnected(false);
+//       setConnectionError(null);
+//       return;
+//     }
+
+//     // Construct WebSocket URL
+//     const apiUrl = process.env.NEXT_PUBLIC_API_URL ?? "https://afibie-bot.com";
+//     const isSecure = apiUrl.startsWith('https');
+//     const wsProtocol = isSecure ? 'wss' : 'ws';
+//     const baseUrl = apiUrl.replace(/^https?:\/\//, '').replace(/^http?:\/\//, '');
+//     const wsUrl = `${wsProtocol}://${baseUrl}/forex-chat?adminId=${adminId}&telegramId=${telegramId}`;
+    
+//     console.log("🔗 WS CONNECTING TO:", wsUrl);
+
+//     const ws = new WebSocket(wsUrl);
+//     wsRef.current = ws;
+
+//     ws.onopen = () => {
+//       console.log("✅ Chat WebSocket connected");
+//       setWsConnected(true);
+//       setConnectionError(null);
+      
+//       // Send start chat message
+//       setTimeout(() => {
+//         if (ws.readyState === WebSocket.OPEN) {
+//           ws.send(JSON.stringify({ 
+//             type: "start_chat", 
+//             telegramId,
+//             timestamp: new Date().toISOString()
+//           }));
+//         }
+//       }, 100);
+//     };
+
+//     ws.onmessage = (event) => {
+//       try {
+//         const parsedData = JSON.parse(event.data);
+//         console.log("📨 Received Forex WS message:", parsedData);
+        
+//         switch (parsedData.type) {
+//           case "connection_established":
+//             console.log("✅ Forex WebSocket connection confirmed");
+//             break;
+//           case "chat_started":
+//             console.log("✅ Forex chat session started");
+//             break;
+//           case "user_message":
+//             if (parsedData.telegramId === telegramId) {
+//               setWsMessages((prev) => [
+//                 ...prev,
+//                 { 
+//                   sender: "user", 
+//                   user: "User", 
+//                   text: parsedData.text, 
+//                   timestamp: parsedData.time 
+//                 },
+//               ]);
+//             }
+//             break;
+//           case "message_sent":
+//             console.log("✅ Forex message delivered to server");
+//             break;
+//           case "pong":
+//             // Heartbeat response
+//             break;
+//           case "error":
+//             console.error("❌ Forex WebSocket error:", parsedData.error);
+//             setConnectionError(parsedData.error);
+//             break;
+//           default:
+//             console.log("Received unknown Forex message type:", parsedData.type);
+//         }
+//       } catch (e) {
+//         console.error("❌ Forex WS Message Parse Error", e);
+//       }
+//     };
+
+//     ws.onclose = (event) => {
+//       console.log("❌ Forex WebSocket closed:", {
+//         code: event.code,
+//         reason: event.reason,
+//         wasClean: event.wasClean
+//       });
+//       setWsConnected(false);
+//       setConnectionError(`Connection closed (code: ${event.code})`);
+      
+//       // Auto-reconnect after 3 seconds
+//       if (event.code !== 1000) {
+//         setTimeout(() => {
+//           if (open) {
+//             console.log("🔄 Attempting to reconnect Forex WebSocket...");
+//             // Trigger reconnection by updating state
+//             setConnectionError("Reconnecting...");
+//           }
+//         }, 3000);
+//       }
+//     };
+
+//     ws.onerror = (err) => {
+//       console.error("❌ Forex WebSocket error:", err);
+//       setConnectionError("WebSocket connection failed");
+//       setWsConnected(false);
+//     };
+
+//     // Cleanup
+//     return () => {
+//       if (ws.readyState === WebSocket.OPEN || ws.readyState === WebSocket.CONNECTING) {
+//         ws.close(1000, "Component unmounting");
+//       }
+//       wsRef.current = null;
+//       setWsConnected(false);
+//     };
+//   }, [open, telegramId, adminId]);
+
+//   // Auto-scroll
+//   useEffect(() => {
+//     if (scrollRef.current) {
+//       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+//     }
+//   }, [allMessages]);
+
+//   const sendMessage = () => {
+//     if (!input.trim()) {
+//       console.error("❌ Message is empty");
+//       return;
+//     }
+
+//     const ws = wsRef.current;
+//     if (!ws || ws.readyState !== WebSocket.OPEN) {
+//       console.error("❌ WebSocket not connected. ReadyState:", ws?.readyState);
+//       setConnectionError("Not connected to server");
+//       return;
+//     }
+
+//     const msg = input.trim();
+//     const timestamp = new Date().toISOString();
+
+//     // Optimistically append
+//     setWsMessages((prev) => [...prev, { 
+//       sender: "admin", 
+//       user: "Admin", 
+//       text: msg, 
+//       timestamp 
+//     }]);
+
+//     try {
+//       ws.send(
+//         JSON.stringify({
+//           type: "admin_reply",
+//           telegramId,
+//           message: msg,
+//           timestamp,
+//         })
+//       );
+//       console.log("📤 Forex message sent to WebSocket");
+//       setInput("");
+//     } catch (error) {
+//       console.error("❌ Failed to send Forex message via WebSocket:", error);
+//       // Remove optimistic update
+//       setWsMessages((prev) => prev.slice(0, -1));
+//       setConnectionError("Failed to send message");
+//     }
+//   };
+
+//   const showLoading = isFetching && historyMessages.length === 0;
+//   const noMessages = !showLoading && allMessages.length === 0;
+
+//   return (
+//     <Dialog open={open} onOpenChange={onOpenChange}>
+//       <DialogContent className="max-w-lg">
+//         <DialogHeader>
+//           <DialogTitle className="flex justify-between items-center">
+//             <span>Chat with {username} (Forex)</span>
+//             <span className={`text-xs px-2 py-1 rounded ${wsConnected ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+//               {wsConnected ? '🟢 Connected' : `🔴 ${connectionError || 'Disconnected'}`}
+//             </span>
+//           </DialogTitle>
+//         </DialogHeader>
+
+//         {/* Chat Area */}
+//         <div className="border rounded-md p-2 bg-muted/30">
+//           <ScrollArea className="h-80">
+//             <div ref={scrollRef} className="space-y-3 px-1 py-2">
+//               {showLoading ? (
+//                 <p className="text-sm text-muted-foreground text-center mt-4">
+//                   Loading messages...
+//                 </p>
+//               ) : noMessages ? (
+//                 <p className="text-sm text-muted-foreground text-center mt-4">
+//                   No messages yet
+//                 </p>
+//               ) : (
+//                 allMessages.map((msg, i) => (
+//                   <div
+//                     key={`${msg.timestamp}-${msg.sender}-${i}`}
+//                     className={`flex ${
+//                       msg.sender === "admin" ? "justify-end" : "justify-start"
+//                     }`}
+//                   >
+//                     <div
+//                       className={`relative px-3 py-2 rounded-2xl text-sm max-w-[75%] shadow-sm
+//                         ${
+//                           msg.sender === "admin"
+//                             ? "bg-blue-500 text-white rounded-br-none"
+//                             : "bg-gray-200 text-gray-900 rounded-bl-none"
+//                         }
+//                       `}
+//                     >
+//                       <p>{msg.text}</p>
+//                       <span
+//                         className={`text-[10px] opacity-70 mt-1 block text-right ${
+//                           msg.sender === "admin" ? "text-white/80" : "text-gray-600"
+//                         }`}
+//                       >
+//                         {format(new Date(msg.timestamp), "HH:mm")}
+//                       </span>
+//                     </div>
+//                   </div>
+//                 ))
+//               )}
+//             </div>
+//           </ScrollArea>
+//         </div>
+
+//         {/* Input Area */}
+//         <DialogFooter className="flex items-center gap-2 mt-3">
+//           <Input
+//             placeholder="Type a message..."
+//             value={input}
+//             onChange={(e) => setInput(e.target.value)}
+//             onKeyDown={(e) => e.key === "Enter" && sendMessage()}
+//             disabled={!wsConnected}
+//           />
+//           <Button 
+//             onClick={sendMessage} 
+//             disabled={!wsConnected || !input.trim()}
+//           >
+//             Send
+//           </Button>
+//         </DialogFooter>
+//       </DialogContent>
+//     </Dialog>
+//   );
+// }

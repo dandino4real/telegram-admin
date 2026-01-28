@@ -295,11 +295,11 @@ export default function ForexUsersPage() {
   // Handle API errors
   useEffect(() => {
     if (usersError) {
-      console.error('ForexUsersPage: Fetch users error:', usersError);
+      console.log('ForexUsersPage: Fetch users error:', usersError);
       toast.error('Failed to fetch users. Please try again.');
     }
     if (adminError) {
-      console.error('ForexUsersPage: Fetch admin error:', adminError);
+      console.log('ForexUsersPage: Fetch admin error:', adminError);
       toast.error('Failed to fetch admin profile. Please try again.');
     }
   }, [usersError, adminError]);
@@ -431,7 +431,7 @@ export default function ForexUsersPage() {
       await navigator.clipboard.writeText(text);
       toast.success('Login ID copied to clipboard');
     } catch (err) {
-      console.error('Failed to copy:', err);
+      console.log('Failed to copy:', err);
       toast.error('Failed to copy Login ID');
     }
   };

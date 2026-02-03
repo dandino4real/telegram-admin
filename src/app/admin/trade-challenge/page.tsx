@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import {
     CheckCircle, XCircle, Clock, MoreHorizontal,
-    Trash, Search, ChevronLeft, ChevronRight, ChevronFirst, ChevronLast, Copy, Check
+    Trash, Search, ChevronLeft, ChevronRight, ChevronFirst, ChevronLast, Copy, Check, Loader2,
 } from 'lucide-react';
 import {
     Card, CardHeader, CardTitle, CardDescription, CardContent
@@ -43,6 +43,9 @@ import { ChatDialog } from './component/chatDialog';
 
 const ITEMS_PER_PAGE = 20;
 
+type UserActionType = 'approve' | 'reject' | 'delete';
+
+
 // Custom Pagination Hook
 const usePagination = (total: number, currentPage: number, itemsPerPage: number) => {
     return useMemo(() => {
@@ -55,13 +58,25 @@ const usePagination = (total: number, currentPage: number, itemsPerPage: number)
 };
 
 // Memoized TableRow Component
-const TableRowMemo = React.memo(({ user, onCopy, setConfirmAction, handleOpenChat }: {
+const TableRowMemo = React.memo(({ user, onCopy, setConfirmAction, handleOpenChat, actionLoading, }: {
     user: Afibe10XUser;
     onCopy: (text: string) => void;
-    setConfirmAction: (action: { type: string; user: Afibe10XUser } | null) => void;
+    setConfirmAction: (
+        action: { type: UserActionType; user: Afibe10XUser } | null
+    ) => void;
     handleOpenChat: (user: Afibe10XUser) => void;
+    actionLoading: {
+        userId: string;
+        type: 'approve' | 'reject' | 'delete';
+    } | null;
 }) => {
     const [copiedId, setCopiedId] = useState<string | null>(null);
+
+
+
+    const isLoadingAction = (type: 'approve' | 'reject' | 'delete') =>
+        actionLoading?.userId === user._id && actionLoading?.type === type;
+
 
     const handleCopy = (text: string) => {
         onCopy(text);
@@ -123,7 +138,7 @@ const TableRowMemo = React.memo(({ user, onCopy, setConfirmAction, handleOpenCha
                             <MoreHorizontal />
                         </Button>
                     </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
+                    {/* <DropdownMenuContent align="end">
                         {user.status === 'pending' && (
                             <>
                                 <DropdownMenuItem onClick={() => setConfirmAction({ type: 'approve', user })}>
@@ -144,7 +159,53 @@ const TableRowMemo = React.memo(({ user, onCopy, setConfirmAction, handleOpenCha
                             <Trash className="mr-2 w-4 h-4" />
                             Delete User
                         </DropdownMenuItem>
+                    </DropdownMenuContent> */}
+
+                    <DropdownMenuContent align="end">
+                        {user.status === 'pending' && (
+                            <>
+                                <DropdownMenuItem
+                                    disabled={!!actionLoading}
+                                    onClick={() => setConfirmAction({ type: 'approve', user })}
+                                >
+                                    {isLoadingAction('approve') ? (
+                                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                    ) : (
+                                        <CheckCircle className="mr-2 h-4 w-4 text-green-600" />
+                                    )}
+                                    {isLoadingAction('approve') ? 'Approving…' : 'Approve User'}
+                                </DropdownMenuItem>
+
+                                <DropdownMenuItem
+                                    disabled={!!actionLoading}
+                                    onClick={() => setConfirmAction({ type: 'reject', user })}
+                                >
+                                    {isLoadingAction('reject') ? (
+                                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                    ) : (
+                                        <XCircle className="mr-2 h-4 w-4 text-red-600" />
+                                    )}
+                                    {isLoadingAction('reject') ? 'Rejecting…' : 'Reject User'}
+                                </DropdownMenuItem>
+
+                                <DropdownMenuSeparator />
+                            </>
+                        )}
+
+                        <DropdownMenuItem
+                            className="text-red-600"
+                            disabled={!!actionLoading}
+                            onClick={() => setConfirmAction({ type: 'delete', user })}
+                        >
+                            {isLoadingAction('delete') ? (
+                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            ) : (
+                                <Trash className="mr-2 h-4 w-4" />
+                            )}
+                            {isLoadingAction('delete') ? 'Deleting…' : 'Delete User'}
+                        </DropdownMenuItem>
                     </DropdownMenuContent>
+
                 </DropdownMenu>
             </TableCell>
         </TableRow>
@@ -157,10 +218,16 @@ export default function TradeChallengePage() {
     const [search, setSearch] = useState('');
     const [statusFilter, setStatusFilter] = useState<'all' | 'pending' | 'approved' | 'rejected'>('all');
     const [page, setPage] = useState(1);
-    const [confirmAction, setConfirmAction] = useState<{ type: string; user: Afibe10XUser } | null>(null);
+    const [confirmAction, setConfirmAction] = useState<{ type: UserActionType; user: Afibe10XUser } | null>(null);
     const [rejectionReason, setRejectionReason] = useState<'' | 'no_deposit' | 'wrong_link'>('');
 
     const [selectedChatUser, setSelectedChatUser] = useState<Afibe10XUser | null>(null);
+
+    const [actionLoading, setActionLoading] = useState<{
+        userId: string;
+        type: 'approve' | 'reject' | 'delete';
+    } | null>(null);
+
 
     const { adminId } = useSession();
     const { data: adminData, isLoading: isAdminLoading, error: adminError } = useGetAdminProfileQuery(adminId || '', {
@@ -184,6 +251,7 @@ export default function TradeChallengePage() {
     const users = useMemo(() => data?.data || [], [data]);
     const total = data?.meta?.total || 0;
     const { totalPages, pages } = usePagination(total, page, ITEMS_PER_PAGE);
+
 
     // Reset page when filters change
     useEffect(() => {
@@ -220,6 +288,7 @@ export default function TradeChallengePage() {
     const handleAction = async () => {
         if (!confirmAction) return;
         const { type, user } = confirmAction;
+        setActionLoading({ userId: user._id, type });
 
         try {
             switch (type) {
@@ -256,6 +325,8 @@ export default function TradeChallengePage() {
                     ? (err as ErrorWithMessage).data!.message
                     : "Action failed";
             toast.error(message);
+        } finally {
+            setActionLoading(null);
         }
     };
 
@@ -277,8 +348,7 @@ export default function TradeChallengePage() {
 
     const handleOpenChat = (user: Afibe10XUser) => {
         setSelectedChatUser(user);
-        // Note: Marking read logic would go here if needed, 
-        // usually by calling an API or letting the backend handle it when admin replies.
+
     };
 
     if (isAdminLoading || !adminData) {
@@ -392,6 +462,7 @@ export default function TradeChallengePage() {
                                             onCopy={copyToClipboard}
                                             setConfirmAction={setConfirmAction}
                                             handleOpenChat={handleOpenChat}
+                                            actionLoading={actionLoading}
                                         />
                                     ))
                                 ) : (

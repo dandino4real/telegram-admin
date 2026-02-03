@@ -619,7 +619,7 @@ export const api = createApi({
           totalPages: response.pagination.totalPages,
         },
       }),
-      providesTags: ["Afibe10XUsers"],
+      providesTags: ["Afibe10XUsers", "AfibieUserStats"],
     }),
 
     approveAfibe10XUser: builder.mutation<

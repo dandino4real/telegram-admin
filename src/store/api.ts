@@ -26,6 +26,12 @@ export type UserStats = {
   forexApproved: number;
   monthlyBreakdown: Array<{ month: string; crypto: number; forex: number }>;
 };
+export type AfibieUserStats = {
+  totalApprovedUsers: number;
+  totalPendingUsers: number;
+  totalRejectedUsers: number;
+
+};
 
 const AUTH_URL = "api/auth";
 
@@ -40,6 +46,7 @@ export const api = createApi({
     "UserStats",
     "NewForexUsers",
     "Afibe10XUsers",
+    "AfibieUserStats",
   ],
 
   refetchOnFocus: true,
@@ -651,6 +658,14 @@ export const api = createApi({
       }),
       invalidatesTags: ["Afibe10XUsers", "UserStats"],
     }),
+     getAfibieUserStats: builder.query<AfibieUserStats, void>({
+      query: () => ({
+        url: "/api/users/afibie10x/stats",
+        method: REST_API_VERBS.GET,
+      }),
+      providesTags: [{ type: "AfibieUserStats" }],
+      keepUnusedDataFor: 300,
+    }),
   }),
 });
 
@@ -690,4 +705,6 @@ export const {
   useApproveAfibe10XUserMutation,
   useRejectAfibe10XUserMutation,
   useDeleteAfibe10XUserMutation,
+  useGetAfibieUserStatsQuery,
+
 } = api;

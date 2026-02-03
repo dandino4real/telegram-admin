@@ -34,6 +34,7 @@ import {
     useRejectAfibe10XUserMutation,
     useDeleteAfibe10XUserMutation,
     useGetAdminProfileQuery,
+    useGetAfibieUserStatsQuery,
 } from '@/store/api';
 import { Afibe10XUser } from '@/store/types/afibe10xUser';
 import { useSession } from '@/hooks/use-session';
@@ -70,7 +71,7 @@ const TableRowMemo = React.memo(({ user, onCopy, setConfirmAction, handleOpenCha
 
     return (
         <TableRow>
-        
+
             <TableCell>
                 <div className="font-medium"> {truncate(user.fullName ?? user.username ?? user.telegramId ?? 'Unknown', 20)} </div>
                 <div className="text-xs text-muted-foreground" title={user.username ?? 'No username'}> @{truncate(user.username ?? 'No username', 16)}</div>
@@ -90,7 +91,7 @@ const TableRowMemo = React.memo(({ user, onCopy, setConfirmAction, handleOpenCha
                     )}
                 </div>
             </TableCell>
-                <TableCell>
+            <TableCell>
                 <StatusBadge label="Status" status={user.status} />
             </TableCell>
             <TableCell>{user.createdAt ? format(new Date(user.createdAt), 'dd/MM/yyyy') : '-'}</TableCell>
@@ -165,6 +166,9 @@ export default function TradeChallengePage() {
     const { data: adminData, isLoading: isAdminLoading, error: adminError } = useGetAdminProfileQuery(adminId || '', {
         skip: !adminId,
     });
+
+    const { data: afibieUserStats, isLoading: isAfibieUserStatsLoading } = useGetAfibieUserStatsQuery();
+
 
     const { data, isLoading, refetch, error: usersError, isFetching } = useGetAfibe10XUsersQuery({
         page,
@@ -299,12 +303,41 @@ export default function TradeChallengePage() {
                 </Breadcrumb>
             </header>
             <Card className="mt-4 mx-4">
-                <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                        Trade Challenge Users
-                    </CardTitle>
-                    <CardDescription>Manage and approve Trade Challenge participants ({total} users).</CardDescription>
+
+                <CardHeader className="gap-4">
+                    {/* Title + Stats Row */}
+                    <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                        <div>
+                            <CardTitle>Trade Challenge Users</CardTitle>
+                            <CardDescription>
+                                Manage and approve Trade Challenge participants ({total} users).
+                            </CardDescription>
+                        </div>
+
+                        {/* Stats */}
+                        <div className="grid grid-cols-3 gap-3 text-center sm:flex sm:gap-6">
+                            <StatItem
+                                label="Approved"
+                                value={afibieUserStats?.totalApprovedUsers}
+                                icon={<CheckCircle className="h-4 w-4 text-green-600" />}
+                                loading={isAfibieUserStatsLoading}
+                            />
+                            <StatItem
+                                label="Pending"
+                                value={afibieUserStats?.totalPendingUsers}
+                                icon={<Clock className="h-4 w-4 text-blue-600" />}
+                                loading={isAfibieUserStatsLoading}
+                            />
+                            <StatItem
+                                label="Rejected"
+                                value={afibieUserStats?.totalRejectedUsers}
+                                icon={<XCircle className="h-4 w-4 text-red-600" />}
+                                loading={isAfibieUserStatsLoading}
+                            />
+                        </div>
+                    </div>
                 </CardHeader>
+
                 <CardContent>
                     <div className="flex flex-col gap-4 mb-6">
                         <div className="flex flex-col sm:flex-row gap-4">
@@ -502,5 +535,31 @@ function StatusBadge({ label, status }: { label: string; status?: string }) {
         <Badge className={`${color} justify-start gap-1`}>
             {icon} {status ? status.replace('_', ' ').charAt(0).toUpperCase() + status.slice(1) : label}
         </Badge>
+    );
+}
+
+
+function StatItem({
+    label,
+    value,
+    icon,
+    loading,
+}: {
+    label: string;
+    value?: number;
+    icon: React.ReactNode;
+    loading?: boolean;
+}) {
+    return (
+        <div className="flex flex-col items-center sm:items-end min-w-[72px]">
+            <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                {icon}
+                <span>{label}</span>
+            </div>
+
+            <div className="text-lg font-semibold tabular-nums">
+                {loading ? '—' : value ?? 0}
+            </div>
+        </div>
     );
 }

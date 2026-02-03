@@ -630,7 +630,7 @@ export const api = createApi({
         url: `/api/users/afibe10x/${id}/approve`,
         method: REST_API_VERBS.PATCH,
       }),
-      invalidatesTags: ["Afibe10XUsers", "UserStats"],
+      invalidatesTags: ["Afibe10XUsers", "UserStats", "AfibieUserStats"],
     }),
 
     rejectAfibe10XUser: builder.mutation<
@@ -645,7 +645,7 @@ export const api = createApi({
         method: REST_API_VERBS.PATCH,
         data: { rejectionReason },
       }),
-      invalidatesTags: ["Afibe10XUsers", "UserStats"],
+      invalidatesTags: ["Afibe10XUsers", "UserStats", "AfibieUserStats"],
     }),
 
     deleteAfibe10XUser: builder.mutation<
@@ -656,7 +656,7 @@ export const api = createApi({
         url: `/api/users/afibe10x/${id}`,
         method: REST_API_VERBS.DELETE,
       }),
-      invalidatesTags: ["Afibe10XUsers", "UserStats"],
+      invalidatesTags: ["Afibe10XUsers", "UserStats", "AfibieUserStats"],
     }),
      getAfibieUserStats: builder.query<AfibieUserStats, void>({
       query: () => ({
